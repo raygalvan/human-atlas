@@ -1,0 +1,45 @@
+[
+  {
+    "loadMs": 5087,
+    "engine": "chromium",
+    "viewport": "1365x900",
+    "gpu": "software renderer on GitHub Actions",
+    "revision": "0ccd3c7f6fc721c45c70cbbb04ba788770555087"
+  },
+  {
+    "structure": "brain",
+    "orbitActionAndSettleMs": 589,
+    "rafIntervalMedianMs": 16.69999999999709,
+    "rafIntervalP95Ms": 16.700000000004366,
+    "rafSamples": 5,
+    "note": "Mouse orbit plus 500 ms settle; software-rendered animation-frame cadence, not physical-device FPS or GPU timing"
+  },
+  {
+    "structure": "brain",
+    "diagnostics": {}
+  },
+  {
+    "structure": "skull",
+    "orbitActionAndSettleMs": 16402,
+    "rafIntervalMedianMs": 3966.5,
+    "rafIntervalP95Ms": 3999.899999999994,
+    "rafSamples": 4,
+    "note": "Mouse orbit plus 500 ms settle; software-rendered animation-frame cadence, not physical-device FPS or GPU timing"
+  },
+  {
+    "structure": "skull",
+    "diagnostics": {}
+  },
+  {
+    "structure": "left second rib",
+    "orbitActionAndSettleMs": 18273,
+    "rafIntervalMedianMs": 6433,
+    "rafIntervalP95Ms": 6433,
+    "rafSamples": 1,
+    "note": "Mouse orbit plus 500 ms settle; software-rendered animation-frame cadence, not physical-device FPS or GPU timing"
+  },
+  {
+    "structure": "left second rib",
+    "diagnostics": {}
+  }
+]

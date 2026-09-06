@@ -19,7 +19,7 @@ The relationship view includes an uncapped, patient-left-to-right skull reveal. 
 
 The 78 replacements retain geometry from the attributed BodyParts3D archive before the app's additional simplification. There is no subdivision, smoothing pass, procedural noise, replacement texture plane, or normal map. The optional pack is 5,859,671 compressed bytes in 44 chunks; only selected inspection structures load. The entire body's resolution has not been increased.
 
-The original `atlas.json` and all base body buffers are unchanged. Each replacement carries its original source ID, name, concept ID and system, plus source-file and topology SHA-256 hashes. The reproducible packer regenerates offsets, counts, bounds, alignment, gzip and metadata together. Rebuilding from the downloaded archive produced byte-identical outputs. Actual bounds agree with base geometry within 0.0000002 m; the runtime also checks identity, registration and buffer bounds before activating detail.
+The original `atlas.json` and all base body buffers are unchanged. Each replacement carries its original source ID, name, concept ID and system, plus source-file and topology SHA-256 hashes. The reproducible packer regenerates offsets, counts, bounds, alignment, gzip and metadata together. Rebuilding from the downloaded archive with Python 3.12.13 on Linux produced byte-identical outputs. Actual bounds agree with base geometry within 0.0000002 m; the runtime also checks identity, registration and buffer bounds before activating detail.
 
 The existing converter maps source `(x,y,z)` millimeters to `(x/1000, z/1000+0.0781112, -y/1000-0.1)` meters: **+X patient left, +Y superior, +Z anterior**. The named left second rib lies entirely at positive X; its right counterpart is entirely negative X. Laterality was established from converter and named structures, independently of camera position.
 
@@ -37,9 +37,13 @@ Detail replaces the original geometry inside the same chunk/system batches. Only
 
 No authoritative Medical Examiner report with identifiable page citations is present in this checkout. The eight inherited Homer groups remain accessible but are explicitly **unverified anatomical reference groups**. Their old IDs and resolver memberships are retained for compatibility; inherited rib levels, laterality and locations are not accepted as findings. There are zero verified injury records and no real lesion, fracture line, dimension or causal conclusion added.
 
-`app/injury-attachments.ts` defines stable target identity, laterality, supported region, evidence citation and evidence review separately from placement method and placement review. A triangle attachment requires an exact topology hash. A reference-space surface mask requires exact source registration.
+`app/injury-attachments.ts` defines stable target identity, laterality, supported region, evidence citation and evidence review separately from placement method and placement review. A triangle attachment requires an exact topology hash. A reference-space surface mask requires exact source registration. Triangle placement is a guarded record format for future work; the surface mask is the rendered mechanism implemented and exercised here.
 
 The explicit developer URL `?developer=registration` exposes a disabled-by-default **Synthetic registration patch** in Inspect anatomy. It is blue and labeled as a synthetic registration test on a named source structure. The shader evaluates interpolated parent surface position and normal before the atlas's GPU translations. It therefore follows the parent during orbit, zoom, isolation, explosion and detail changes; parent visibility and clipping also apply. It is not a free-floating mesh, screen circle, or Homer finding. The fixture anchor comes from base geometry and remains fixed when the original-detail topology is substituted.
+
+## Browser recording
+
+[Watch the anatomy review recording](anatomy-review.mp4): an 81-second excerpt of the successful Chromium registration run, at normal playback speed. Three chronological cuts (22–43 s, 115–145 s, 178–208 s) show the real integrated brain, skull and left second rib controls and rotation. The blue surface patches are explicitly synthetic developer tests. Loading and longer idle intervals are omitted; this edit is not a performance benchmark. The full recording, explosion/hidden-parent screenshots and missing-asset captures are retained in the [browser run artifacts](https://github.com/raygalvan/human-atlas/actions/runs/34058732163).
 
 ## Before and after
 
@@ -61,15 +65,40 @@ Both sets are actual Chromium captures of the integrated atlas, at 1365 × 900, 
 
 ![Existing skull and brain with uncapped reveal](skull-brain-reveal.png)
 
+## Mobile and attachment examples
+
+These are actual WebKit browser captures from the same integrated renderer. The blue patch appears only in the explicitly enabled developer test.
+
+| Reduced portrait viewport | Landscape relationship view |
+|---|---|
+| ![Brain in 390 × 600 viewport](webkit-phone-portrait-brain.png) | ![Skull reveal in 844 × 390 viewport](webkit-phone-landscape-relationship-reveal.png) |
+
+![Portrait Layers leave the brain and patient axes visible](portrait-layers-open.png)
+
+![Synthetic surface mask after orbit](webkit-brain-synthetic-orbit.png)
+
 ## Verification and performance
 
 Local validation passed with Node 24.19.0: TypeScript, atlas buffers/concepts, interaction/explosion layout, inherited injury resolver, nested asset paths, removal of the active flat Body Surface feature, preservation of ordinary skin/mobile styles, all original-detail geometry/hashes/laterality/attachment contracts, and production build. CI uses Node 22 and Playwright 1.55.1.
 
 Browser evidence is generated by `scripts/check-atlas-browser.mjs` and `scripts/check-refinement-browser.mjs` against the production build served at `/courtroom-atlas/`. Acceptance uses Chromium 140 (SwiftShader) and WebKit 26 on GitHub Actions Linux. Viewports are desktop 1365 × 900, reduced phone portrait 390 × 600, and phone landscape 844 × 390. Chromium mobile input uses emulated touch orbit and two-finger pinch; WebKit uses a touch-capable viewport with mouse-driven orbit. This is not a physical-iPhone test.
 
-Browser acceptance and paired performance results are being completed; the final PR update records the completed runs and limitations. Screenshots are visually inspected; the scripts also check shader errors, real rendered changes, canvas picking, repeated tab transitions, reveal/restoration, hidden parent behavior, source-detail swaps, missing optional assets and nested requests. The developer sequence produces an actual browser recording.
+All six [automatic browser acceptance jobs passed](https://github.com/raygalvan/human-atlas/actions/runs/34058732163) on application/test revision `ff299b226339087acd5ab075b04c7694ec30db9f`: Chromium and WebKit × desktop, mobile, and registration/fallback. The accompanying [CI validation/build passed](https://github.com/raygalvan/human-atlas/actions/runs/34058732177). Later review-only commits add evidence and do not change the application. Screenshots are visually inspected; the scripts also check shader errors, real rendered changes, canvas picking, repeated tab transitions, reveal/restoration, hidden parent behavior, source-detail swaps, missing optional assets and nested requests. The developer sequence produced the actual browser recording above. The portrait screenshots caught and resolved a missing compact-style import, a landscape rule incorrectly matching short portrait screens, and orientation labels hidden under Layers. Browser assertions also exposed an early visibility read on a slow software-rendered frame; assertions now wait for the observable rendered state. No acceptance scenarios were removed.
 
-Initial single-run load observations were 5,491 ms on baseline and 4,149 ms on the refined build. These occurred on separate CI runners and do not establish a speedup. Refined isolated brain rendering submitted 6 draw calls / 381,576 triangles; the original batching code submitted 69 batches even when their members were hidden. Submitted triangles include hidden members within a visible batch. Renderer `renderMs` measures JavaScript submission time, not GPU completion or FPS.
+Automatic browser acceptance is split into six independent jobs to keep review latency bounded. Documentation-only commits skip expensive browser repetition. The paired baseline benchmark is now an on-demand workflow; its successful capture and raw results are retained here.
+
+A [paired browser run](https://github.com/raygalvan/human-atlas/actions/runs/34057269241) built pinned main and the refined application, then exercised both sequentially on the same CI runner at 1365 × 900. One observation per scene:
+
+| Measurement | Main baseline | Refined |
+|---|---:|---:|
+| Initial atlas load | 5.087 s | 7.220 s |
+| Brain orbit action + fixed 500 ms settle | 0.589 s | 0.600 s |
+| Original broad skull concept orbit + settle | 16.402 s | 6.639 s |
+| Left second rib orbit + settle | 18.273 s | 4.359 s |
+
+These include Playwright/input scheduling and software-rendering delays; they are not hardware interaction latency or GPU timings. Loading was slower in this paired observation. Other independent cold loads varied substantially, so no overall loading speedup is claimed. Animation-frame samples were too sparse (1–6 per scene) for a defensible FPS estimate. [Raw baseline measurements](baseline-chromium-measurements.json), [raw refined measurements](refined-chromium-measurements.json), and [WebKit desktop/mobile observations](webkit-measurements.json) are included for review. WebKit orbit actions plus a fixed 450 ms settle took 0.456–0.566 s across the recorded viewports.
+
+The refined isolated brain submitted 6 draw calls / 381,576 triangles. The original chunk/system layout contains 69 batches and the old renderer did not skip wholly invisible batches. The new cranial-only preset uses 2 draw calls; the broader original skull concept used in the paired comparison uses 8. Submitted triangles include hidden members within a visible batch. Renderer `renderMs` measures JavaScript submission time, not GPU completion or FPS. Physical-device performance remains unmeasured.
 
 The local preview server started, but this environment's browser rejected both loopback and the documented preview URL. Accordingly, the inspectable browser evidence comes from CI; neither these screenshots nor a build artifact is a live deployment. Production publication remains a separate reviewed action at the existing courtroom URL.
 

@@ -87,7 +87,7 @@ node scripts/validate-inspection.mjs
 
 This packer reuses the existing converter’s exact transform, retains source positions/normals/triangles, regenerates all target offsets/counts/bounds, and emits deterministic gzip files plus SHA-256 source and topology mappings. It leaves `atlas.json` and all base body buffers unchanged. No subdivision, smoothing, procedural noise, texture planes, or normal maps are used to invent geometry. The official `_obj_99` archive is itself a reduced reference dataset, not raw MRI resolution.
 
-See [geometry and browser review](docs/geometry-review/REVIEW.md) for source comparison, limitations, before/after captures, and test details. Browser CI exports a build and captures under **anatomy-browser-evidence**; this is not a live deployment.
+See [geometry and browser review](docs/geometry-review/REVIEW.md) for source comparison, limitations, before/after captures, and test details. Browser CI exports a build and captures under `anatomy-browser-evidence-*`; this is not a live deployment.
 
 ## Deploy
 
