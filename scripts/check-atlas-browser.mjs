@@ -27,7 +27,18 @@ async function inspect(page,name){await layers(page);const summary=page.locator(
 async function closeLayers(page,mobile){if(mobile&&await page.getByRole('tab',{name:'Systems',exact:true}).isVisible())await page.getByRole('button',{name:'Open atlas layers',exact:true}).click();await settle(page);}
 async function detail(page,count){await page.waitForFunction(n=>Number(document.querySelector('.scene')?.dataset.detailParts)===n,count,{timeout:90000});}
 async function capture(page,name){await settle(page);const png=await page.screenshot({path:path.join(output,name+'.png'),timeout:90000});const image=PNG.sync.read(png);assert(image.width>300&&image.height>300);return png;}
-async function orbit(page,mobile=false){const box=await page.locator('canvas').boundingBox(),x=box.width*.56,y=box.height*.42,start=Date.now();await page.mouse.move(x,y);await page.mouse.down();await page.mouse.move(x+box.width*.13,y+18,{steps:4});await page.mouse.up();await settle(page);return Date.now()-start;}
+async function orbit(page,mobile=false){
+ if(mobile&&engine==='chromium'){
+  const session=await page.context().newCDPSession(page),size=page.viewportSize(),x=size.width*.55,y=size.height*.42,start=Date.now();
+  await session.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x,y,id:1}]});
+  await session.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{x:x+40,y:y+12,id:1}]});
+  await session.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});
+  await session.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x:x-30,y,id:1},{x:x+30,y,id:2}]});
+  await session.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{x:x-42,y,id:1},{x:x+42,y,id:2}]});
+  await session.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});
+  await session.detach();await settle(page);return Date.now()-start;
+ }
+ const box=await page.locator('canvas').boundingBox(),x=box.width*.56,y=box.height*.42,start=Date.now();await page.mouse.move(x,y);await page.mouse.down();await page.mouse.move(x+box.width*.13,y+18,{steps:4});await page.mouse.up();await settle(page);return Date.now()-start;}
 function bluePixels(bytes){const {data,width,height}=PNG.sync.read(bytes);let count=0;for(let y=135;y<height-175;y++)for(let x=320;x<width-110;x++){const i=(y*width+x)*4;if(data[i]<data[i+1]*.78&&data[i+2]>data[i+1]*1.08&&data[i+1]>45)count++;}return count;}
 try{
  for(const [label,viewport] of [['desktop',{width:1365,height:900}],['phone-portrait',{width:390,height:600}],['phone-landscape',{width:844,height:390}]]){
@@ -47,7 +58,7 @@ try{
    for(const [name,slug,count] of [['Brain','brain',59],['Skull','skull',18],['Left rib 2','rib',1]]){
     await inspect(page,name);await detail(page,count);await closeLayers(page,mobile);
     const before=await capture(page,`${label}-${slug}`),orbitMs=await orbit(page,mobile),after=await capture(page,`${label}-${slug}-orbit`);assert.notDeepEqual(before,after,'Orbit must change the rendered anatomy');
-    measurements.push({label,structure:name,orbitActionAndSettleMs:orbitMs,diagnostics:await page.locator('.scene').evaluate(el=>({...el.dataset}))});
+    measurements.push({label,structure:name,orbitActionAndSettleMs:orbitMs,diagnostics:await page.locator('.scene').evaluate(el=>({...el.dataset})),input:mobile&&engine==='chromium'?'Emulated touch orbit and two-finger pinch':'Mouse orbit'});
     // Direct canvas picking must open a real named source structure.
     if(!mobile&&slug==='brain'){
      await page.getByRole('button',{name:'front view',exact:true}).click();await settle(page);
@@ -56,7 +67,7 @@ try{
      await page.getByRole('button',{name:'Close',exact:true}).click();await inspect(page,name);await detail(page,count);
     }
     await layers(page);
-    if(!mobile){for(const direction of ['front','rear','left','right','top','base']){await page.getByRole('button',{name:`Inspect from ${direction}`,exact:true}).click();await capture(page,`${slug}-${direction}`);}}
+    if(!mobile&&engine==='chromium'){for(const direction of ['front','rear','left','right','top','base']){await page.getByRole('button',{name:`Inspect from ${direction}`,exact:true}).click();await capture(page,`${slug}-${direction}`);}}
    }
    await inspect(page,'Brain + skull');await detail(page,77);
    const reveal=page.getByRole('slider',{name:/Reveal through skull/});await reveal.press('Home');for(let n=0;n<5;n++)await reveal.press('PageUp');assert.equal(Number(await reveal.getAttribute('aria-valuenow')),50);

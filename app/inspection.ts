@@ -19,7 +19,8 @@ export function inspectionGroups(atlas:Atlas){
   {id:'central',name:'Other source brain structures',ids:brain.filter(id=>!assigned.has(id))},
  ]};
 }
-export function partIsVisible(part:Part,state:SceneState){
+export function partIsVisible(part:Part,state:SceneState,isSkull=false){
+ if(isClipped(part.bounds[0][0],isSkull,state.skullReveal??0))return false;
  if(state.hiddenParts?.includes(part.id))return false;
  return state.isolate?state.selected.includes(part.id):state.visible.includes(part.system)||state.selected.includes(part.id);
 }
@@ -34,3 +35,6 @@ export function anatomyColor(part:Part,brainIds:Set<string>):string|undefined{
  }
  if(part.system==='skeletal')return '#d8cbb1';
 }
+
+/** Stable targets for synthetic developer fixtures, never case findings. */
+export function registrationTarget(mode?:Inspection|null){return mode==='rib'?'FJ3229':mode==='skull'?'FJ3200':'FJ1833';}

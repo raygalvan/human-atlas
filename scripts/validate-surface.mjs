@@ -8,6 +8,7 @@ assert(!scene.includes("selectionMode==='surface'"),'No Homer opaque body surfac
 const {SYSTEMS}=await import('../app/anatomy.ts');
 assert(SYSTEMS.some(s=>s.id==='integumentary'&&s.name==='Body surface'),'Ordinary body surface system must remain');
 assert(scene.includes("opacity:system==='integumentary'?.1:1"),'Ordinary skin transparency is preserved');
+assert(page.includes("import './mobile.css'"),'Compact mobile styles must be imported by the active page');
 const css=readFileSync('app/mobile.css','utf8');
 for(const token of ['.view-controls','.bottom-dock .explode-control','.bottom-dock .dock-reset','display: none !important','.dock-layers'])assert(css.includes(token));
 console.log('PASS: flat Body Surface removed, ordinary skin and compact mobile controls preserved, asset safeguards retained.');

@@ -20,7 +20,7 @@ assert.equal(triangles,detail.triangles);assert(groups.brain.every(id=>ids.has(i
 const rib=atlas.parts.find(p=>p.id==='FJ3229'),opposite=atlas.parts.find(p=>p.name==='Right second rib');assert(rib.bounds[0][0]>0&&opposite.bounds[1][0]<0,'Patient laterality must be established from named structures');
 const uniqueComponents=new Set(groups.components.flatMap(c=>c.ids));assert.equal(uniqueComponents.size,groups.brain.length);assert.equal(groups.components.flatMap(c=>c.ids).length,groups.brain.length,'Component controls must partition existing brain meshes');
 const state={selected:[rib.id],visible:[],isolate:true};assert(partIsVisible(rib,state));assert(!partIsVisible(rib,{...state,hiddenParts:[rib.id]}));assert(!partIsVisible(rib,{...state,selected:[]}));
-assert(!isClipped(.1,true,0));assert(isClipped(.02,true,.5));assert(!isClipped(.02,false,.5));
+assert(!isClipped(.1,true,0));assert(isClipped(.02,true,.5));assert(!isClipped(.02,false,.5));assert(!partIsVisible({...rib,bounds:[[.01,0,0],[.05,.1,.1]]},{...state,skullReveal:.5},true),'A completely clipped parent must be invisible to picking and overlays');
 const mask={method:'reference-space-surface-mask',registration:SOURCE_REGISTRATION,center:[0,0,0],normal:[0,0,1],radius:.01,depth:.003};
 assert(attachmentCompatible(mask,SOURCE_REGISTRATION,'new-topology'));assert(!attachmentCompatible(mask,'different-registration','new-topology'));
 assert(attachmentCompatible({method:'triangle-barycentric',topology:'a'},SOURCE_REGISTRATION,'a'));assert(!attachmentCompatible({method:'triangle-barycentric',topology:'a'},SOURCE_REGISTRATION,'b'));

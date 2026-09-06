@@ -27,3 +27,11 @@ Earlier repository revisions included female reference anatomy: Kristen Browne a
 Adaptations: translated native meter/Y-up coordinates onto the stage, coincident vertices welded and source normals averaged, geometry simplified with a 0.2% per-structure relative error bound, and normals quantized. Colors and display systems are curated for this interface. All 888 source meshes are represented, with 1,073 source nodes available as selectable individual or compound concepts.
 
 This is a reference assembly with whole-body surface and selected organs, including female reproductive anatomy. Its skeleton and muscle coverage is partial. It is not a complete model of every human structure or a single-person scan. Eight placenta/umbilical structures are classified under Pregnancy reference and hidden by default.
+
+## Integrated inspection detail (2026-09)
+
+The optional `models/inspection/` assets retain the original geometry in the same official `isa_BP3D_4.0_obj_99.zip` archive for 59 brain meshes, 18 cranial/facial bones, and the left second rib (FJ3229 / FMA8012). This adds no second anatomical dataset. These assets and screenshots derived from them remain CC BY 4.0, with the attribution above.
+
+Additional adaptations: targeted lossless source packing, per-file source SHA-256 and geometry topology hashes, explicit replacement mapping to the existing IDs, named-component visibility controls, natural anatomical materials, restrained lighting, and uncapped skull clipping. There is no fabricated fracture, tissue reconstruction, subdivision, smoothing, noise, or normal-map detail. The synthetic developer surface mask is a registration test and not patient evidence.
+
+The `_obj_99` archive already contains polygon-reduced reference models. “Original source detail” means preserving those archive meshes before this application’s additional simplification. Source open boundaries and component seams are retained.
