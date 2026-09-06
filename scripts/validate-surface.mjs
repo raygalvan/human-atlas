@@ -1,9 +1,16 @@
 import assert from 'node:assert/strict';
 import {readFileSync,statSync} from 'node:fs';
-const portrait='public/homer/homer-surface-reference.jpg';
-const size=statSync(portrait).size;assert(size>10000&&size<500000,'surface portrait must be a compact user-supplied image');
+import {createHash} from 'node:crypto';
+const portrait='public/homer/homer-surface-reference.webp';
+const size=statSync(portrait).size;assert(size>5000&&size<500000,'surface portrait must be a compact user-supplied image');
+const image=readFileSync(portrait);
+assert.equal(createHash('sha256').update(image).digest('hex'),'054384cf053a37a6bd854645a267d472ca16066217929fdfc89f7b68156207e1','Portrait differs from the locally decoded source export');
+assert.equal(image.toString('ascii',8,12),'WEBP');
+await import('./validate-surface-assets.mjs');
 const surface=readFileSync('app/surface.tsx','utf8');
 for(const token of ['PATIENT LEFT','scalp-abrasions','left-face','tongue-lacerations','posterior-neck','flank-lower-back','Illustrative placement']) assert(surface.includes(token),`missing surface contract: ${token}`);
 const page=readFileSync('app/page.tsx','utf8');assert(page.includes("selectionMode:'surface'"),'body surface must activate the dedicated 3D material mode');assert(page.includes('HomerSurfaceReference'),'surface demonstrative must render beside the 3D viewer');
 const scene=readFileSync('app/scene.tsx','utf8');assert(scene.includes("s.selectionMode==='surface'"),'scene must render opaque surface material in body-surface mode');
+assert(surface.includes("homerAssetUrl('/homer/"),'Portrait must use the presentation-asset resolver');
+assert(surface.includes('SurfaceReferenceBoundary'),'Surface failures must be contained');
 console.log(`Surface demonstrative contract passed; portrait ${size} bytes; patient-left orientation and ambiguity notes present.`);

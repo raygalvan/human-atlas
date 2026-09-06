@@ -13,7 +13,7 @@ const output = path.join(root, 'artifacts/surface');
 mkdirSync(output, {recursive:true});
 const prefix = '/courtroom-atlas/';
 const dist = path.join(root, 'dist');
-const types = {'.html':'text/html', '.js':'text/javascript', '.css':'text/css', '.json':'application/json', '.jpg':'image/jpeg', '.gz':'application/gzip', '.svg':'image/svg+xml'};
+const types = {'.html':'text/html', '.js':'text/javascript', '.css':'text/css', '.json':'application/json', '.jpg':'image/jpeg', '.webp':'image/webp', '.gz':'application/gzip', '.svg':'image/svg+xml'};
 let server, browser;
 try {
   let entry = process.argv[2];
@@ -32,8 +32,8 @@ try {
     entry = `http://127.0.0.1:${server.address().port}${prefix}index.html`;
   }
   browser = await (engine === 'webkit' ? webkit : chromium).launch({headless:true, ...(engine === 'chromium' ? {args:['--use-angle=swiftshader','--enable-unsafe-swiftshader','--no-sandbox']} : {})});
-  for (const [label, viewport] of [['desktop',{width:1365,height:900}], ['mobile',{width:390,height:680}]]) {
-    const mobile = label === 'mobile';
+  for (const [label, viewport] of [['desktop',{width:1365,height:900}], ['mobile',{width:390,height:680}], ['mobile-landscape',{width:844,height:390}]]) {
+    const mobile = label.startsWith('mobile');
     const context = await browser.newContext({viewport, deviceScaleFactor:1, isMobile:mobile, hasTouch:mobile});
     const page = await context.newPage();
     const errors = [];
@@ -54,16 +54,26 @@ try {
         await page.getByRole('tab',{name:'Body Surface',exact:true}).click();
         await page.waitForTimeout(400);
         assert.deepEqual(errors, [], 'Opening Body Surface must not remove the application');
+        if (mobile && await page.getByRole('tab',{name:'Body Surface',exact:true}).isVisible()) await page.getByRole('button',{name:'Open atlas layers',exact:true}).click();
         await page.getByRole('complementary',{name:'Homer body surface demonstrative'}).waitFor();
         await page.waitForFunction(() => {
           const image = document.querySelector('.surface-portrait img');
           return image?.complete && image.naturalWidth > 100;
         });
-        // Close the mobile layer sheet if it still covers the reference panel.
-        if (mobile && await page.getByRole('tab',{name:'Body Surface',exact:true}).isVisible()) await page.getByRole('button',{name:'Open atlas layers',exact:true}).click();
         await page.getByRole('button',{name:'Back',exact:true}).click();
         await page.getByRole('img',{name:'Posterior body surface reference'}).waitFor();
         await page.getByRole('button',{name:'Face',exact:true}).click();
+        if(attempt===0){
+          await openLayers();
+          const toggle=page.getByRole('switch',{name:'Show Left forehead abrasion',exact:true});
+          await toggle.click();
+          assert.equal(await toggle.getAttribute('aria-checked'),'true');
+          assert.equal(await page.locator('.forehead-abrasion.on').count(),1);
+          await toggle.click();
+          assert.equal(await toggle.getAttribute('aria-checked'),'false');
+          assert.equal(await page.locator('.forehead-abrasion.on').count(),0);
+          if(mobile) await page.getByRole('button',{name:'Open atlas layers',exact:true}).click();
+        }
         if (attempt === 2) await page.screenshot({path:path.join(output,`${engine}-${label}-surface.png`)});
         await openLayers();
         await page.getByRole('tab',{name:'Internal',exact:true}).click();
@@ -83,6 +93,22 @@ try {
       assert.deepEqual(errors,[]);
       assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1),'Horizontal overflow');
       await page.screenshot({path:path.join(output,`${engine}-${label}-anatomy.png`)});
+      // A missing portrait must leave Layers, the canvas and Back usable.
+      await page.route('**/homer/homer-surface-reference.webp',route=>route.fulfill({status:404,body:'test missing image'}));
+      await openLayers();
+      await page.getByRole('tab',{name:/Homer.s Injuries/}).click();
+      await page.getByRole('tab',{name:'Body Surface',exact:true}).click();
+      if(mobile) await page.getByRole('button',{name:'Open atlas layers',exact:true}).click();
+      await page.getByText('The face reference could not be loaded.',{exact:false}).waitFor();
+      assert.equal(await page.locator('canvas').count(),1);
+      assert.equal(await page.locator('.surface-mark').count(),0,'No injury marks without their reference image');
+      await page.getByRole('button',{name:'Back',exact:true}).click();
+      await page.getByRole('img',{name:'Posterior body surface reference'}).waitFor();
+      await page.unroute('**/homer/homer-surface-reference.webp');
+      await page.getByRole('button',{name:'Face',exact:true}).click();
+      await page.getByRole('button',{name:'Retry portrait',exact:true}).click();
+      await page.waitForFunction(()=>document.querySelector('.surface-portrait img')?.naturalWidth>100);
+      assert.deepEqual(errors,[]);
       console.log(`PASS ${engine} ${label}: three Body Surface round trips, portrait decode, Face/Back, retained canvas, responsive controls`);
     } catch(error) {
       await page.screenshot({path:path.join(output,`${engine}-${label}-failure.png`)}).catch(()=>{});

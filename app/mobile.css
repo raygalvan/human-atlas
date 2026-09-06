@@ -1,0 +1,80 @@
+/* Compact touch layout: leave Layers accessible without covering the model.
+   Higher-specificity selectors also win when globals.css is loaded afterward. */
+@media (max-width: 767px), (max-width: 1024px) and (max-height: 600px) and (pointer: coarse) {
+  .studio .view-controls,
+  .studio .bottom-dock .explode-control,
+  .studio .bottom-dock .dock-reset {
+    display: none !important;
+  }
+  .studio .bottom-dock {
+    inset: auto auto calc(28px + env(safe-area-inset-bottom)) 12px;
+    transform: none;
+    width: auto;
+    min-width: 0;
+    max-width: none;
+    margin: 0;
+    padding: 0;
+    gap: 0;
+    z-index: 45;
+    border-radius: 8px;
+  }
+  .studio .bottom-dock .dock-layers {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-width: 88px;
+    min-height: 44px;
+    padding: 10px 12px;
+    border: 0;
+    font-size: 12px;
+  }
+  .studio .scene-caption { display: none; }
+  .studio .layers-panel.mobile-open,
+  .studio .layers-panel.mobile-open:has(.surface-list) {
+    top: auto;
+    bottom: calc(84px + env(safe-area-inset-bottom));
+    left: 12px;
+    right: 12px;
+    width: auto;
+    max-height: calc(100dvh - 220px - env(safe-area-inset-bottom));
+    padding: 12px 14px 0;
+  }
+  .studio .system-list,
+  .studio .injury-list,
+  .studio .surface-list { min-height: 0; overflow-y: auto; }
+  .studio .surface-reference {
+    bottom: calc(84px + env(safe-area-inset-bottom));
+    max-height: calc(100dvh - 220px - env(safe-area-inset-bottom));
+  }
+  /* Only the active sheet takes input; the Layers button remains above both. */
+  .studio:has(.layers-panel.mobile-open) .surface-reference {
+    visibility: hidden;
+    pointer-events: none;
+  }
+}
+.surface-reference .surface-image-error {
+  padding: 20px 12px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: #603234;
+}
+.surface-reference .surface-image-error button { margin-top: 12px; }
+
+@media (max-width: 1024px) and (max-height: 600px) and (pointer: coarse) {
+  .studio .layers-panel.mobile-open,
+  .studio .layers-panel.mobile-open:has(.surface-list) {
+    top: 12px;
+    max-height: calc(100dvh - 100px - env(safe-area-inset-bottom));
+    width: min(320px, calc(100vw - 24px));
+    right: auto;
+  }
+  .studio .surface-reference {
+    top: 12px;
+    right: 12px;
+    left: auto;
+    width: min(340px, calc(100vw - 24px));
+    max-height: calc(100dvh - 100px - env(safe-area-inset-bottom));
+  }
+}
