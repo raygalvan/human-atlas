@@ -36,7 +36,10 @@ const numbered=(name:string,n:number)=>{
 };
 const side=(name:string,which:'left'|'right')=>words(name).has(which);
 const numberedRibs=(atlas:Atlas,which:'left'|'right',numbers:number[])=>parts(atlas,(p,name)=>p.system==='skeletal'&&name.includes('rib')&&side(name,which)&&numbers.some(n=>numbered(name,n)));
-const numberedCostalCartilage=(atlas:Atlas,which:'left'|'right',numbers:number[])=>parts(atlas,(p,name)=>p.system==='connective'&&name.includes('costal')&&name.includes('cartilage')&&side(name,which)&&numbers.some(n=>numbered(name,n)));
+const numberedCostalCartilage=(atlas:Atlas,which:'left'|'right',numbers:number[])=>{
+ const matches=(name:string)=>side(name,which)&&numbers.some(n=>numbered(name,n))&&((name.includes('costal')&&name.includes('cartilage'))||(name.includes('rib')&&name.includes('cartilage')));
+ return fallback(conceptParts(atlas,matches),parts(atlas,(_p,name)=>matches(name)));
+};
 const fallback=(primary:string[],secondary:string[])=>primary.length?primary:secondary;
 
 export const HOMER_INJURIES:HomerInjuryGroup[]=[
