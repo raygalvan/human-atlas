@@ -13,10 +13,12 @@ jobs:
       fail-fast: false
       matrix:
         browser: [chromium, webkit]
+        scope: [desktop, mobile, registration]
     env:
       LIBGL_ALWAYS_SOFTWARE: '1'
       WEBKIT_DISABLE_DMABUF_RENDERER: '1'
       ATLAS_BROWSER: ${{ matrix.browser }}
+      ATLAS_SCOPE: ${{ matrix.scope }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -28,6 +30,7 @@ jobs:
       - run: npm ci --no-audit --no-fund
       - run: npm run check && npm run build
       - name: Prepare inspectable build and source
+        if: matrix.browser == 'chromium' && matrix.scope == 'desktop'
         run: tar -czf anatomy-debug.tar.gz dist app web scripts package.json package-lock.json
       - name: Install browser tools outside the application
         run: |
@@ -40,7 +43,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: anatomy-browser-evidence-${{ matrix.browser }}
+          name: anatomy-browser-evidence-${{ matrix.browser }}-${{ matrix.scope }}
           path: |
             anatomy-debug.tar.gz
             artifacts/refinement/

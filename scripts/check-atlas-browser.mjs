@@ -10,6 +10,7 @@ import {fileURLToPath} from 'node:url';
 const root=fileURLToPath(new URL('../',import.meta.url));
 const require=createRequire(path.join(process.env.ATLAS_BROWSER_TOOLS||root,'package.json'));
 const {chromium,webkit}=require('playwright'),{PNG}=require('pngjs');
+const scope=process.env.ATLAS_SCOPE||'all';
 const engine=process.env.ATLAS_BROWSER||'chromium',output=path.join(root,'artifacts/refinement',engine);
 mkdirSync(output,{recursive:true});
 const dist=path.join(root,'dist'),prefix='/courtroom-atlas/';
@@ -45,7 +46,7 @@ async function orbit(page,mobile=false){
  const box=await page.locator('canvas').boundingBox(),x=box.width*.56,y=box.height*.42,start=Date.now();await page.mouse.move(x,y);await page.mouse.down();await page.mouse.move(x+box.width*.13,y+18,{steps:4});await page.mouse.up();await settle(page);return Date.now()-start;}
 function bluePixels(bytes){const {data,width,height}=PNG.sync.read(bytes);let count=0;for(let y=135;y<height-175;y++)for(let x=320;x<width-110;x++){const i=(y*width+x)*4;if(data[i]<data[i+1]*.78&&data[i+2]>data[i+1]*1.08&&data[i+1]>45)count++;}return count;}
 try{
- for(const [label,viewport] of [['desktop',{width:1365,height:900}],['phone-portrait',{width:390,height:600}],['phone-landscape',{width:844,height:390}]]){
+ for(const [label,viewport] of [['desktop',{width:1365,height:900}],['phone-portrait',{width:390,height:600}],['phone-landscape',{width:844,height:390}]].filter(([label])=>scope==='all'||(scope==='desktop'?label==='desktop':scope==='mobile'?label!=='desktop':false))){
   const mobile=label!=='desktop',context=await browser.newContext({viewport,deviceScaleFactor:1,isMobile:mobile,hasTouch:mobile}),page=await context.newPage();watch(page);
   try{
    const loadMs=await loaded(page);measurements.push({engine,viewport,label,loadMs,environment:'GitHub Actions Linux; software rendering; emulated mobile, not a physical iPhone'});
@@ -60,7 +61,7 @@ try{
     await page.getByRole('button',{name:'Clear injuries',exact:true}).click();await page.getByRole('tab',{name:'Systems',exact:true}).click();
    }
    for(const [name,slug,count] of [['Brain','brain',59],['Skull','skull',18],['Left rib 2','rib',1]]){
-    await inspect(page,name);await detail(page,count);if(mobile&&slug==='brain')await capture(page,`${label}-brain-layers-open`);await closeLayers(page,mobile);
+    await inspect(page,name);await detail(page,count);if(mobile&&slug==='brain'){if(label==='phone-portrait')assert((await page.locator('.layers-panel').boundingBox()).y>220,'Portrait Layers must leave usable space for anatomy');await capture(page,`${label}-brain-layers-open`);}await closeLayers(page,mobile);
     const before=await capture(page,`${label}-${slug}`),orbitMs=await orbit(page,mobile),after=await capture(page,`${label}-${slug}-orbit`);assert.notDeepEqual(before,after,'Orbit must change the rendered anatomy');
     measurements.push({label,structure:name,orbitActionAndSettleMs:orbitMs,diagnostics:await page.locator('.scene').evaluate(el=>({...el.dataset})),input:mobile&&engine==='chromium'?'Emulated touch orbit and two-finger pinch':'Mouse orbit'});
     // Direct canvas picking must open a real named source structure.
@@ -88,6 +89,7 @@ try{
    console.log(`PASS ${engine} ${label}: integrated selection, orbit, tab transitions, reveal/restore, ordinary skin, compact controls, nested assets`);
   }catch(error){writeFileSync(path.join(output,label+'-failure.txt'),String(error.stack)+'\n'+JSON.stringify(errors));await page.screenshot({path:path.join(output,label+'-failure.png'),timeout:90000}).catch(()=>{});throw error;}finally{await context.close();}
  }
+ if(scope==='all'||scope==='registration'){
  // Synthetic fixtures live only behind the explicit developer view. Record a
  // short sequence exercising the actual GPU-driven attachment and topology swap.
  const context=await browser.newContext({viewport:{width:1365,height:900},deviceScaleFactor:1,...(engine==='chromium'?{recordVideo:{dir:path.join(output,'video'),size:{width:1365,height:900}}}:{})});
@@ -115,4 +117,5 @@ try{
   try{await loaded(page);await inspect(page,'Brain');await page.getByText('Detail unavailable. Base anatomy remains active.',{exact:true}).waitFor();assert(failures>0);await detail(page,0);assert.equal(await page.locator('.scene').getAttribute('data-visible-parts'),'59');await orbit(page);await capture(page,`missing-${missing}-working-brain`);assert.equal(await page.locator('.error').count(),0);assert.deepEqual(errors,[]);}finally{await context.close();}
  }
  console.log(`PASS ${engine}: surface masks survive rotation, source-detail swaps and explosion; hidden parents remove overlays; missing optional assets retain the base viewer`);
+ }
 }finally{writeFileSync(path.join(output,'measurements.json'),JSON.stringify(measurements,null,2));await browser.close();await new Promise(r=>server.close(r));}

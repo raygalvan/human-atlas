@@ -11,4 +11,5 @@ assert(scene.includes("opacity:system==='integumentary'?.1:1"),'Ordinary skin tr
 assert(page.includes("import './mobile.css'"),'Compact mobile styles must be imported by the active page');
 const css=readFileSync('app/mobile.css','utf8');
 for(const token of ['.view-controls','.bottom-dock .explode-control','.bottom-dock .dock-reset','display: none !important','.dock-layers'])assert(css.includes(token));
+assert(css.includes('(orientation: landscape) and (pointer: coarse)'), 'Landscape drawer rule must exclude reduced-height portrait screens');
 console.log('PASS: flat Body Surface removed, ordinary skin and compact mobile controls preserved, asset safeguards retained.');
