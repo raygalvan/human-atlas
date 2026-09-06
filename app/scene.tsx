@@ -78,10 +78,10 @@ export default function AnatomyScene({atlas,state,onSelect,onProgress,onError,on
       if (abs(sourcePart-testId)<0.25) {
         vec3 delta=referencePosition-testCenter; float depth=dot(delta,testNormal);
         float radius=length(delta-testNormal*depth);
-        float patch=(1.0-smoothstep(testRadius*.8,testRadius,radius))
+        float maskWeight=(1.0-smoothstep(testRadius*.8,testRadius,radius))
           *(1.0-smoothstep(testRadius*.3,testRadius*.5,abs(depth)))
           *smoothstep(.25,.5,dot(normalize(referenceNormal),testNormal));
-        diffuseColor.rgb=mix(diffuseColor.rgb,vec3(.025,.32,.48),patch*.85);
+        diffuseColor.rgb=mix(diffuseColor.rgb,vec3(.025,.32,.48),maskWeight*.85);
       }`);
     shader.fragmentShader=shader.fragmentShader.replace('#include <emissivemap_fragment>',`#include <emissivemap_fragment>
       // A cool edge identifies selection without washing out anatomical materials.
