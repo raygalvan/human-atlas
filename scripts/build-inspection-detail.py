@@ -11,7 +11,7 @@ out=root/'public/models/inspection';out.mkdir(exist_ok=True)
 concepts={c['name']:c for c in base['concepts']}
 ids=set(concepts['brain']['elements'])
 if stage=='all':
- ids.update(p['id'] for p in base['parts'] if p['id'] in concepts['skull']['elements'] and p['system']=='skeletal')
+ ids.update(p['id'] for p in base['parts'] if p['id'] in concepts['skull']['elements'] and p['system']=='skeletal' and 'hyoid' not in p['name'].lower())
  ids.update(concepts['left second rib']['elements'])
 chunks=[];records=[];blob=bytearray();summaries=[]
 def flush():
@@ -48,5 +48,9 @@ for part in base['parts']:
  records.append(record)
 flush()
 manifest={'version':'bodyparts3d-4.0-inspection-v1','source':'https://dbarchive.biosciencedbc.jp/data/bodyparts3d/LATEST/isa_BP3D_4.0_obj_99.zip','license':'CC-BY-4.0','transform':'(x,y,z) mm -> (x/1000,z/1000+0.0781112,-y/1000-0.1) m','parts':records,'chunks':chunks,'triangles':sum(p['indexCount']//3 for p in records)}
+# Remove only obsolete outputs owned by this deterministic packer.
+valid={c['gzip'].split('/')[-1] for c in chunks}
+for old in out.glob('detail-*.bin.gz'):
+ if old.name not in valid:old.unlink()
 (out/'detail.json').write_text(json.dumps(manifest,separators=(',',':'))+'\n')
 print(json.dumps({'stage':stage,'parts':len(records),'baseTriangles':sum(p['baseTriangles'] for p in records),'detailTriangles':manifest['triangles'],'gzipBytes':sum(c['gzipBytes'] for c in chunks),'maxChunkGzipBytes':max(c['gzipBytes'] for c in chunks),'chunks':len(chunks)},indent=2))

@@ -3,4 +3,4 @@
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 assert(!readFileSync(new URL('../app/page.tsx',import.meta.url),'utf8').includes('HomerSurfaceReference'));
-await import('./check-refinement-browser.mjs');
+await import('./check-atlas-browser.mjs');

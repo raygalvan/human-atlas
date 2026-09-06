@@ -26,7 +26,7 @@ try{
   await page.getByRole('combobox').fill(name);
   await page.getByRole('option').filter({has:page.locator('.search-result-name').getByText(name,{exact:true})}).click();
   await page.getByRole('button',{name:'Isolate structure',exact:true}).click();
-  if(label==='brain-milestone')await page.waitForFunction(()=>document.querySelector('.scene')?.dataset.detailParts==='59',{},{timeout:90000});
+  if(label!=='baseline')await page.waitForFunction(n=>Number(document.querySelector('.scene')?.dataset.detailParts)===n,slug==='brain'?59:slug==='skull'?18:1,{timeout:90000});
   await page.waitForTimeout(700);
   await page.screenshot({path:path.join(output,`${engine}-${slug}-front.png`)});
   await page.getByRole('button',{name:'Close',exact:true}).click();
