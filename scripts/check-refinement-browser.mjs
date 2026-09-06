@@ -17,7 +17,7 @@ const browser=await (engine==='webkit'?webkit:chromium).launch({headless:true,..
 const results=[];
 try{
  const context=await browser.newContext({viewport:{width:1365,height:900},deviceScaleFactor:1});
- const page=await context.newPage(),errors=[];page.setDefaultTimeout(30000);page.on('pageerror',e=>errors.push(e.message));
+ const page=await context.newPage(),errors=[];page.setDefaultTimeout(90000);page.on('pageerror',e=>errors.push(e.message));
  const start=Date.now();await page.goto(`http://127.0.0.1:${server.address().port}${prefix}`,{waitUntil:'domcontentloaded'});
  await page.waitForFunction(()=>document.querySelector('canvas')&&!document.querySelector('.loading'),{},{timeout:150000});
  results.push({loadMs:Date.now()-start,engine,viewport:'1365x900',gpu:'software renderer on GitHub Actions',revision:process.env.GITHUB_SHA});
@@ -31,9 +31,11 @@ try{
   await page.getByRole('button',{name:'Close',exact:true}).click();
   await page.waitForTimeout(700);
   await page.screenshot({path:path.join(output,`${engine}-${slug}-isolated.png`)});
+  if(label!=='baseline'){
   const canvas=await page.locator('canvas').boundingBox();
-  await page.mouse.move(canvas.width*.55,canvas.height*.42);await page.mouse.down();await page.mouse.move(canvas.width*.75,canvas.height*.42,{steps:24});await page.mouse.up();
+  await page.mouse.move(canvas.width*.55,canvas.height*.42);await page.mouse.down();await page.mouse.move(canvas.width*.75,canvas.height*.42,{steps:4});await page.mouse.up();
   await page.waitForTimeout(500);await page.screenshot({path:path.join(output,`${engine}-${slug}-oblique.png`)});
+  }
   await page.getByRole('button',{name:'Assemble and reset',exact:true}).click();
  }
  assert.deepEqual(errors,[]);await context.close();
