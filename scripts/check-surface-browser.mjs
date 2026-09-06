@@ -34,8 +34,8 @@ try {
   browser = await (engine === 'webkit' ? webkit : chromium).launch({headless:true, ...(engine === 'chromium' ? {args:['--use-angle=swiftshader','--enable-unsafe-swiftshader','--no-sandbox']} : {})});
   for (const [label, viewport] of [['desktop',{width:1365,height:900}], ['mobile',{width:390,height:680}], ['mobile-landscape',{width:844,height:390}]]) {
     const mobile = label.startsWith('mobile');
-    const context = await browser.newContext({viewport, deviceScaleFactor:1, isMobile:mobile, hasTouch:mobile});
-    const page = await context.newPage();
+    let context = await browser.newContext({viewport, deviceScaleFactor:1, isMobile:mobile, hasTouch:mobile});
+    let page = await context.newPage();
     const errors = [];
     page.setDefaultTimeout(20000);
     page.on('pageerror', error => errors.push(error.message));
@@ -93,13 +93,29 @@ try {
       assert.deepEqual(errors,[]);
       assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1),'Horizontal overflow');
       await page.screenshot({path:path.join(output,`${engine}-${label}-anatomy.png`)});
-      // A missing portrait must leave Layers, the canvas and Back usable.
-      await page.route('**/homer/homer-surface-reference.webp',route=>route.fulfill({status:404,body:'test missing image'}));
+      // Use a fresh context before fault injection. WebKit can reuse a decoded
+      // in-memory image from an earlier mount without issuing a new request.
+      // Routing after that mount would test the cache, not the failure handler.
+      await context.close();
+      context = await browser.newContext({viewport, deviceScaleFactor:1, isMobile:mobile, hasTouch:mobile});
+      page = await context.newPage();
+      page.setDefaultTimeout(20000);
+      page.on('pageerror', error => errors.push(error.message));
+      page.on('crash', () => errors.push('Browser page crashed during image failure test'));
+      let failedImageRequests = 0;
+      await page.route('**/homer/homer-surface-reference.webp',route=>{
+        failedImageRequests++;
+        return route.fulfill({status:404,headers:{'Cache-Control':'no-store'},body:'test missing image'});
+      });
+      await page.goto(entry, {waitUntil:'domcontentloaded',timeout:90000});
+      await page.getByRole('heading',{name:'Homer Atlas'}).waitFor();
+      await page.waitForFunction(() => document.querySelector('canvas') && !document.querySelector('.loading'), {}, {timeout:150000});
       await openLayers();
       await page.getByRole('tab',{name:/Homer.s Injuries/}).click();
       await page.getByRole('tab',{name:'Body Surface',exact:true}).click();
       if(mobile) await page.getByRole('button',{name:'Open atlas layers',exact:true}).click();
       await page.getByText('The face reference could not be loaded.',{exact:false}).waitFor();
+      assert(failedImageRequests > 0,'The missing-image request must actually be intercepted');
       assert.equal(await page.locator('canvas').count(),1);
       assert.equal(await page.locator('.surface-mark').count(),0,'No injury marks without their reference image');
       await page.getByRole('button',{name:'Back',exact:true}).click();
