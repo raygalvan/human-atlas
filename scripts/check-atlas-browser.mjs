@@ -18,7 +18,7 @@ const server=createServer((req,res)=>{try{const u=new URL(req.url,'http://localh
 await new Promise(r=>server.listen(0,'127.0.0.1',r));
 const entry=`http://127.0.0.1:${server.address().port}${prefix}`;
 const browser=await (engine==='webkit'?webkit:chromium).launch({headless:true,...(engine==='chromium'?{args:['--use-angle=swiftshader','--enable-unsafe-swiftshader','--no-sandbox']}:{})});
-const measurements=[],errors=[];
+const measurements=[],errors=[],touchSessions=new WeakMap();
 function watch(page){page.setDefaultTimeout(45000);page.on('pageerror',e=>errors.push(e.message));page.on('crash',()=>errors.push('Page crashed'));page.on('console',m=>{if(m.type()==='error'&&/THREE|shader|WebGL/i.test(m.text()))errors.push(m.text());});}
 const settle=page=>page.waitForTimeout(450);
 async function loaded(page,url=entry){const start=Date.now();await page.goto(url,{waitUntil:'domcontentloaded',timeout:90000});await page.waitForFunction(()=>document.querySelector('canvas')&&!document.querySelector('.loading'),{},{timeout:150000});return Date.now()-start;}
@@ -29,14 +29,18 @@ async function detail(page,count){await page.waitForFunction(n=>Number(document.
 async function capture(page,name){await settle(page);const png=await page.screenshot({path:path.join(output,name+'.png'),timeout:90000});const image=PNG.sync.read(png);assert(image.width>300&&image.height>300);return png;}
 async function orbit(page,mobile=false){
  if(mobile&&engine==='chromium'){
-  const session=await page.context().newCDPSession(page),size=page.viewportSize(),x=size.width*.55,y=size.height*.42,start=Date.now();
+  // Keep the CDP session until context close: detaching resets Chromium's
+  // emulation state and can silently turn a touch viewport into pointer:fine.
+  const coarse=await page.evaluate(()=>matchMedia('(pointer: coarse)').matches);
+  let session=touchSessions.get(page);if(!session){session=await page.context().newCDPSession(page);touchSessions.set(page,session);}
+  const size=page.viewportSize(),x=size.width*.55,y=size.height*.42,start=Date.now();
   await session.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x,y,id:1}]});
   await session.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{x:x+40,y:y+12,id:1}]});
   await session.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});
   await session.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x:x-30,y,id:1},{x:x+30,y,id:2}]});
   await session.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{x:x-42,y,id:1},{x:x+42,y,id:2}]});
   await session.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});
-  await session.detach();await settle(page);return Date.now()-start;
+  await settle(page);assert.equal(await page.evaluate(()=>matchMedia('(pointer: coarse)').matches),coarse,'Touch test must preserve device emulation');return Date.now()-start;
  }
  const box=await page.locator('canvas').boundingBox(),x=box.width*.56,y=box.height*.42,start=Date.now();await page.mouse.move(x,y);await page.mouse.down();await page.mouse.move(x+box.width*.13,y+18,{steps:4});await page.mouse.up();await settle(page);return Date.now()-start;}
 function bluePixels(bytes){const {data,width,height}=PNG.sync.read(bytes);let count=0;for(let y=135;y<height-175;y++)for(let x=320;x<width-110;x++){const i=(y*width+x)*4;if(data[i]<data[i+1]*.78&&data[i+2]>data[i+1]*1.08&&data[i+1]>45)count++;}return count;}
@@ -56,7 +60,7 @@ try{
     await page.getByRole('button',{name:'Clear injuries',exact:true}).click();await page.getByRole('tab',{name:'Systems',exact:true}).click();
    }
    for(const [name,slug,count] of [['Brain','brain',59],['Skull','skull',18],['Left rib 2','rib',1]]){
-    await inspect(page,name);await detail(page,count);await closeLayers(page,mobile);
+    await inspect(page,name);await detail(page,count);if(mobile&&slug==='brain')await capture(page,`${label}-brain-layers-open`);await closeLayers(page,mobile);
     const before=await capture(page,`${label}-${slug}`),orbitMs=await orbit(page,mobile),after=await capture(page,`${label}-${slug}-orbit`);assert.notDeepEqual(before,after,'Orbit must change the rendered anatomy');
     measurements.push({label,structure:name,orbitActionAndSettleMs:orbitMs,diagnostics:await page.locator('.scene').evaluate(el=>({...el.dataset})),input:mobile&&engine==='chromium'?'Emulated touch orbit and two-finger pinch':'Mouse orbit'});
     // Direct canvas picking must open a real named source structure.
