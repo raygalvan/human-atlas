@@ -1,0 +1,34 @@
+name: Integrated anatomy browser review
+on:
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      LIBGL_ALWAYS_SOFTWARE: '1'
+      WEBKIT_DISABLE_DMABUF_RENDERER: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - run: npm run build
+      - name: Install browser regression tools
+        run: |
+          npm install --prefix "$RUNNER_TEMP/atlas-browser" --no-save --package-lock=false playwright@1.55.1
+          node "$RUNNER_TEMP/atlas-browser/node_modules/playwright/cli.js" install --with-deps chromium webkit
+      - name: Capture integrated reference anatomy
+        env:
+          ATLAS_BROWSER_TOOLS: ${{ runner.temp }}/atlas-browser
+        run: node scripts/check-refinement-browser.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: integrated-anatomy-review
+          path: artifacts/refinement/
+          retention-days: 14
