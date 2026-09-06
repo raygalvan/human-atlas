@@ -21,7 +21,23 @@ jobs:
       - name: Install browser regression tools
         run: |
           npm install --prefix "$RUNNER_TEMP/atlas-browser" --no-save --package-lock=false playwright@1.55.1
-          node "$RUNNER_TEMP/atlas-browser/node_modules/playwright/cli.js" install --with-deps chromium webkit
+          node "$RUNNER_TEMP/atlas-browser/node_modules/playwright/cli.js" install --with-deps chromium
+      - uses: actions/checkout@v4
+        with:
+          ref: 0ccd3c7f6fc721c45c70cbbb04ba788770555087
+          path: .baseline
+          persist-credentials: false
+      - name: Build pinned main for comparison
+        working-directory: .baseline
+        run: npm ci --no-audit --no-fund && npm run build
+      - name: Measure baseline with the same browser actions
+        env:
+          ATLAS_BROWSER_TOOLS: ${{ runner.temp }}/atlas-browser
+          ATLAS_CAPTURE: baseline
+          ATLAS_MEASURE_INTERACTION: '1'
+          ATLAS_SOURCE_REVISION: 0ccd3c7f6fc721c45c70cbbb04ba788770555087
+          ATLAS_DIST: ${{ github.workspace }}/.baseline/dist
+        run: node scripts/check-refinement-browser.mjs
       - name: Capture integrated reference anatomy
         env:
           ATLAS_BROWSER_TOOLS: ${{ runner.temp }}/atlas-browser
