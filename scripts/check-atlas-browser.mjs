@@ -62,7 +62,7 @@ try{
     await page.getByRole('button',{name:'Clear injuries',exact:true}).click();await page.getByRole('tab',{name:'Systems',exact:true}).click();
    }
    for(const [name,slug,count] of [['Brain','brain',59],['Skull','skull',18],['Left rib 2','rib',1]]){
-    await inspect(page,name);await detail(page,count);if(mobile&&slug==='brain'){if(label==='phone-portrait')assert((await page.locator('.layers-panel').boundingBox()).y>220,'Portrait Layers must leave usable space for anatomy');await capture(page,`${label}-brain-layers-open`);}await closeLayers(page,mobile);
+    await inspect(page,name);await detail(page,count);if(mobile&&slug==='brain'){if(label==='phone-portrait'){const panel=await page.locator('.layers-panel').boundingBox(),axes=await page.locator('.orientation-compass').boundingBox();assert(panel.y>220,'Portrait Layers must leave usable space for anatomy');assert(axes.y+axes.height<panel.y,'Patient axes must stay above the portrait drawer');}await capture(page,`${label}-brain-layers-open`);}await closeLayers(page,mobile);
     const before=await capture(page,`${label}-${slug}`),orbitMs=await orbit(page,mobile),after=await capture(page,`${label}-${slug}-orbit`);assert.notDeepEqual(before,after,'Orbit must change the rendered anatomy');
     measurements.push({label,structure:name,orbitActionAndSettleMs:orbitMs,diagnostics:await page.locator('.scene').evaluate(el=>({...el.dataset})),input:mobile&&engine==='chromium'?'Emulated touch orbit and two-finger pinch':'Mouse orbit'});
     // Direct canvas picking must open a real named source structure.
