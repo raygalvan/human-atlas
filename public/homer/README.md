@@ -1,5 +1,7 @@
 # Homer surface reference
 
-`homer-surface-reference.jpg` is a user-supplied, non-photorealistic cartoon reference used only to give the courtroom demonstrative a slight visual resemblance to Homer. It is not a biometric reconstruction, medical photograph, or evidence of injury appearance.
+`homer-surface-reference.webp` is a 360 × 480 browser-sized derivative of Ray's supplied `homer_sortof.jpg` cartoon. Only resizing and WebP compression were applied. The corrupt JPEG in the first Body Surface pass was removed. This file was decoded locally and its Git blob SHA was verified after upload.
 
-The injury overlays are separate UI annotations. Their locations are demonstrative regions based on the supplied injury diagram and existing Medical Examiner audit. Overlay size, color, and shape are presentation choices and do not claim measured wound dimensions.
+SHA-256: `054384cf053a37a6bd854645a267d472ca16066217929fdfc89f7b68156207e1`.
+
+This is a stylized 2D reference panel, not a photograph, patient-specific 3D reconstruction, or measured injury record. Its illustrative overlays are separate from the rotatable BodyParts3D geometry. Keep left/right orientation explicit. The portrait must use the presentation-asset URL helper rather than the model-only helper.
