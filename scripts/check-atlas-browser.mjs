@@ -26,6 +26,7 @@ async function loaded(page,url=entry){const start=Date.now();await page.goto(url
 async function layers(page){if(!await page.getByRole('tab',{name:'Systems',exact:true}).isVisible())await page.getByRole('button',{name:'Open atlas layers',exact:true}).click();}
 async function inspect(page,name){await layers(page);const summary=page.locator('.inspection-controls summary');if(!await page.getByRole('button',{name:'Brain',exact:true}).isVisible())await summary.click();await page.getByRole('button',{name,exact:true}).click();}
 async function closeLayers(page,mobile){if(mobile&&await page.getByRole('tab',{name:'Systems',exact:true}).isVisible())await page.getByRole('button',{name:'Open atlas layers',exact:true}).click();await settle(page);}
+async function overlay(page,visible){await page.waitForFunction(value=>document.querySelector('.scene')?.dataset.overlayVisible===String(value),visible,{timeout:45000});}
 async function detail(page,count){await page.waitForFunction(n=>Number(document.querySelector('.scene')?.dataset.detailParts)===n,count,{timeout:90000});}
 async function capture(page,name){await settle(page);const png=await page.screenshot({path:path.join(output,name+'.png'),timeout:90000});const image=PNG.sync.read(png);assert(image.width>300&&image.height>300);return png;}
 async function orbit(page,mobile=false){
@@ -107,8 +108,8 @@ try{
    await page.getByRole('switch',{name:'Original source detail',exact:true}).click();await detail(page,count);
    const explode=page.getByRole('slider',{name:'Explode anatomy',exact:true});await explode.press('Home');for(let i=0;i<4;i++)await explode.press('PageUp');await page.waitForTimeout(1800);await capture(page,`${slug}-synthetic-exploded`);
    assert.equal(await page.locator('.scene').getAttribute('data-overlay-visible'),'true');
-   if(slug==='brain'){await page.getByRole('switch',{name:'Show left cerebral hemisphere',exact:true}).click();await settle(page);assert.equal(await page.locator('.scene').getAttribute('data-overlay-visible'),'false');await capture(page,'brain-parent-hidden');}
-   await page.getByRole('button',{name:'Restore atlas',exact:true}).click();await settle(page);assert.equal(await page.locator('.scene').getAttribute('data-overlay-visible'),'false');
+   if(slug==='brain'){await page.getByRole('switch',{name:'Show left cerebral hemisphere',exact:true}).click();await overlay(page,false);assert.equal(await page.locator('.scene').getAttribute('data-overlay-visible'),'false');await capture(page,'brain-parent-hidden');}
+   await page.getByRole('button',{name:'Restore atlas',exact:true}).click();await overlay(page,false);assert.equal(await page.locator('.scene').getAttribute('data-overlay-visible'),'false');
   }
  }finally{await context.close();}
  for(const missing of ['catalogue','chunk']){
