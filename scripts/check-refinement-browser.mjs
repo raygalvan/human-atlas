@@ -17,15 +17,16 @@ const browser=await (engine==='webkit'?webkit:chromium).launch({headless:true,..
 const results=[];
 try{
  const context=await browser.newContext({viewport:{width:1365,height:900},deviceScaleFactor:1});
- const page=await context.newPage(),errors=[];page.setDefaultTimeout(90000);page.on('pageerror',e=>errors.push(e.message));
+ const page=await context.newPage(),errors=[];page.setDefaultTimeout(90000);page.on('pageerror',e=>errors.push(e.message));page.on('console',message=>{if(message.type()==='error'&&/THREE|shader|WebGL/i.test(message.text()))errors.push(message.text());});
  const start=Date.now();await page.goto(`http://127.0.0.1:${server.address().port}${prefix}`,{waitUntil:'domcontentloaded'});
  await page.waitForFunction(()=>document.querySelector('canvas')&&!document.querySelector('.loading'),{},{timeout:150000});
  results.push({loadMs:Date.now()-start,engine,viewport:'1365x900',gpu:'software renderer on GitHub Actions',revision:process.env.GITHUB_SHA});
- for(const [name,slug] of [['brain','brain'],['skull','skull'],['left second rib','rib']]){
+ for(const [name,slug] of [['brain','brain'],['skull','skull'],['left second rib','rib']].filter(([,slug])=>label!=='brain-milestone'||slug==='brain')){
   await page.getByRole('button',{name:'Search anatomy',exact:true}).click();
   await page.getByRole('combobox').fill(name);
   await page.getByRole('option').filter({has:page.locator('.search-result-name').getByText(name,{exact:true})}).click();
   await page.getByRole('button',{name:'Isolate structure',exact:true}).click();
+  if(label==='brain-milestone')await page.waitForFunction(()=>document.querySelector('.scene')?.dataset.detailParts==='59',{},{timeout:90000});
   await page.waitForTimeout(700);
   await page.screenshot({path:path.join(output,`${engine}-${slug}-front.png`)});
   await page.getByRole('button',{name:'Close',exact:true}).click();
@@ -36,6 +37,7 @@ try{
   await page.mouse.move(canvas.width*.55,canvas.height*.42);await page.mouse.down();await page.mouse.move(canvas.width*.75,canvas.height*.42,{steps:4});await page.mouse.up();
   await page.waitForTimeout(500);await page.screenshot({path:path.join(output,`${engine}-${slug}-oblique.png`)});
   }
+  results.push({structure:name,diagnostics:await page.locator('.scene').evaluate(el=>({...el.dataset}))});
   await page.getByRole('button',{name:'Assemble and reset',exact:true}).click();
  }
  assert.deepEqual(errors,[]);await context.close();

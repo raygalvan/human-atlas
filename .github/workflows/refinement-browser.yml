@@ -25,6 +25,7 @@ jobs:
       - name: Capture integrated reference anatomy
         env:
           ATLAS_BROWSER_TOOLS: ${{ runner.temp }}/atlas-browser
+          ATLAS_CAPTURE: brain-milestone
         run: node scripts/check-refinement-browser.mjs
       - uses: actions/upload-artifact@v4
         if: always()
