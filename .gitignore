@@ -37,3 +37,7 @@ next-env.d.ts
 /outputs/
 /work/
 *.tsbuildinfo
+
+/artifacts/
+
+/public/models/inspection/*.bin

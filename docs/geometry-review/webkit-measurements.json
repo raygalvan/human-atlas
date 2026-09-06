@@ -1,0 +1,167 @@
+[
+  {
+    "engine": "webkit",
+    "viewport": {
+      "width": 1365,
+      "height": 900
+    },
+    "label": "desktop",
+    "loadMs": 4674,
+    "environment": "GitHub Actions Linux; software rendering; emulated mobile, not a physical iPhone"
+  },
+  {
+    "label": "desktop",
+    "structure": "Brain",
+    "orbitActionAndSettleMs": 460,
+    "diagnostics": {
+      "renderMs": "66.00",
+      "drawCalls": "6",
+      "renderTriangles": "381576",
+      "detailParts": "59",
+      "visibleParts": "59",
+      "overlayVisible": "false",
+      "overlayAnchor": "0,0,0"
+    },
+    "input": "Mouse orbit"
+  },
+  {
+    "label": "desktop",
+    "structure": "Skull",
+    "orbitActionAndSettleMs": 466,
+    "diagnostics": {
+      "renderMs": "56.00",
+      "drawCalls": "2",
+      "renderTriangles": "320248",
+      "detailParts": "18",
+      "visibleParts": "18",
+      "overlayVisible": "false",
+      "overlayAnchor": "0,0,0"
+    },
+    "input": "Mouse orbit"
+  },
+  {
+    "label": "desktop",
+    "structure": "Left rib 2",
+    "orbitActionAndSettleMs": 540,
+    "diagnostics": {
+      "renderMs": "17.00",
+      "drawCalls": "1",
+      "renderTriangles": "164118",
+      "detailParts": "1",
+      "visibleParts": "1",
+      "overlayVisible": "false",
+      "overlayAnchor": "0,0,0"
+    },
+    "input": "Mouse orbit"
+  },
+  {
+    "engine": "webkit",
+    "viewport": {
+      "width": 390,
+      "height": 600
+    },
+    "label": "phone-portrait",
+    "loadMs": 6461,
+    "environment": "GitHub Actions Linux; software rendering; emulated mobile, not a physical iPhone"
+  },
+  {
+    "label": "phone-portrait",
+    "structure": "Brain",
+    "orbitActionAndSettleMs": 457,
+    "diagnostics": {
+      "renderMs": "91.00",
+      "drawCalls": "6",
+      "renderTriangles": "381576",
+      "detailParts": "59",
+      "visibleParts": "59",
+      "overlayVisible": "false",
+      "overlayAnchor": "0,0,0"
+    },
+    "input": "Mouse orbit"
+  },
+  {
+    "label": "phone-portrait",
+    "structure": "Skull",
+    "orbitActionAndSettleMs": 459,
+    "diagnostics": {
+      "renderMs": "34.00",
+      "drawCalls": "2",
+      "renderTriangles": "320248",
+      "detailParts": "18",
+      "visibleParts": "18",
+      "overlayVisible": "false",
+      "overlayAnchor": "0,0,0"
+    },
+    "input": "Mouse orbit"
+  },
+  {
+    "label": "phone-portrait",
+    "structure": "Left rib 2",
+    "orbitActionAndSettleMs": 457,
+    "diagnostics": {
+      "renderMs": "11.00",
+      "drawCalls": "1",
+      "renderTriangles": "164118",
+      "detailParts": "1",
+      "visibleParts": "1",
+      "overlayVisible": "false",
+      "overlayAnchor": "0,0,0"
+    },
+    "input": "Mouse orbit"
+  },
+  {
+    "engine": "webkit",
+    "viewport": {
+      "width": 844,
+      "height": 390
+    },
+    "label": "phone-landscape",
+    "loadMs": 5490,
+    "environment": "GitHub Actions Linux; software rendering; emulated mobile, not a physical iPhone"
+  },
+  {
+    "label": "phone-landscape",
+    "structure": "Brain",
+    "orbitActionAndSettleMs": 456,
+    "diagnostics": {
+      "renderMs": "57.00",
+      "drawCalls": "6",
+      "renderTriangles": "381576",
+      "detailParts": "59",
+      "visibleParts": "59",
+      "overlayVisible": "false",
+      "overlayAnchor": "0,0,0"
+    },
+    "input": "Mouse orbit"
+  },
+  {
+    "label": "phone-landscape",
+    "structure": "Skull",
+    "orbitActionAndSettleMs": 566,
+    "diagnostics": {
+      "renderMs": "46.00",
+      "drawCalls": "2",
+      "renderTriangles": "320248",
+      "detailParts": "18",
+      "visibleParts": "18",
+      "overlayVisible": "false",
+      "overlayAnchor": "0,0,0"
+    },
+    "input": "Mouse orbit"
+  },
+  {
+    "label": "phone-landscape",
+    "structure": "Left rib 2",
+    "orbitActionAndSettleMs": 456,
+    "diagnostics": {
+      "renderMs": "11.00",
+      "drawCalls": "1",
+      "renderTriangles": "164118",
+      "detailParts": "1",
+      "visibleParts": "1",
+      "overlayVisible": "false",
+      "overlayAnchor": "0,0,0"
+    },
+    "input": "Mouse orbit"
+  }
+]

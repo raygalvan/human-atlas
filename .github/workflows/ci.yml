@@ -19,6 +19,7 @@ jobs:
       - run: node scripts/validate-atlas.mjs
       - run: node scripts/validate-interactions.mjs
       - run: node scripts/validate-injuries.mjs
+      - run: node scripts/validate-inspection.mjs
       - run: node scripts/validate-surface.mjs
       - run: node scripts/validate-base-path.mjs
       - run: npm run build

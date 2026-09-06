@@ -18,6 +18,7 @@ export interface HomerInjuryGroup {
  color:string;
  description:string;
  evidenceNote:string;
+ reviewStatus:'unverified';
  resolver:(atlas:Atlas)=>string[];
 }
 
@@ -44,51 +45,51 @@ const fallback=(primary:string[],secondary:string[])=>primary.length?primary:sec
 
 export const HOMER_INJURIES:HomerInjuryGroup[]=[
  {
-  id:'brain-hemorrhage',section:'Head & brain',name:'Brain hemorrhage regions',shortName:'Brain hemorrhage',color:'#b42318',
-  description:'Reference brain isolation for the documented subarachnoid hemorrhage regions. Regional hemorrhage overlays will be added on top of this anatomy rather than coloring the entire brain as injured.',
-  evidenceNote:'ME audit: left temporal, bilateral parietal, right frontal, right occipital, and inferior right temporal regions.',
+  id:'brain-hemorrhage',section:'Head & brain',name:'Brain reference',shortName:'Brain reference',color:'#b42318',
+  description:'Inherited reference-anatomy group. Its case finding, rib levels, laterality, and location have not been checked against an identified source report in this repository.',
+  evidenceNote:'Unverified. Source report and page citation required before this becomes a Homer finding or an injury placement.',reviewStatus:'unverified',
   resolver:atlas=>fallback(conceptParts(atlas,name=>name==='brain','nervous'),parts(atlas,(p,name)=>p.system==='nervous'&&name.includes('brain'))),
  },
  {
-  id:'skull-fracture',section:'Head & brain',name:'Skull fracture reference',shortName:'Skull fracture',color:'#c96712',
-  description:'Cranial bone isolation for the documented skull fracture. The fracture path itself will be a separate courtroom overlay, not an assertion that every isolated cranial bone is fractured.',
-  evidenceNote:'Uses the atlas cranial/skull structures as the reference shell for the later fracture overlay.',
+  id:'skull-fracture',section:'Head & brain',name:'Skull reference',shortName:'Skull reference',color:'#c96712',
+  description:'Inherited reference-anatomy group. Its case finding, rib levels, laterality, and location have not been checked against an identified source report in this repository.',
+  evidenceNote:'Unverified. Source report and page citation required before this becomes a Homer finding or an injury placement.',reviewStatus:'unverified',
   resolver:atlas=>fallback(conceptParts(atlas,name=>name==='skull'||name.includes('cranium'),'skeletal'),parts(atlas,(p,name)=>p.system==='skeletal'&&(name.includes('skull')||name.includes('cranium')||name.includes('cranial')))),
  },
  {
-  id:'left-ribs-2-4',section:'Rib cage',name:'Left ribs 2–4 fractures',shortName:'Left ribs 2–4',color:'#a9362d',
-  description:'Isolates the left second through fourth ribs. The prior ME audit places the documented fracture regions in their anterolateral sectors.',
-  evidenceNote:'ME audit: left ribs 2–4, anterolateral sectors.',
+  id:'left-ribs-2-4',section:'Rib cage',name:'Left ribs 2–4 reference',shortName:'Left ribs 2–4',color:'#a9362d',
+  description:'Inherited reference-anatomy group. Its case finding, rib levels, laterality, and location have not been checked against an identified source report in this repository.',
+  evidenceNote:'Unverified. Source report and page citation required before this becomes a Homer finding or an injury placement.',reviewStatus:'unverified',
   resolver:atlas=>numberedRibs(atlas,'left',[2,3,4]),
  },
  {
-  id:'right-ribs-2-5',section:'Rib cage',name:'Right ribs 2–5 fractures',shortName:'Right ribs 2–5',color:'#8f241f',
-  description:'Isolates the right second through fifth ribs. The second rib carries a reported fracture count of two without inventing two separate coordinates.',
-  evidenceNote:'ME audit: right ribs 2–5, anterolateral sectors; right rib 2 has two reported fractures.',
+  id:'right-ribs-2-5',section:'Rib cage',name:'Right ribs 2–5 reference',shortName:'Right ribs 2–5',color:'#8f241f',
+  description:'Inherited reference-anatomy group. Its case finding, rib levels, laterality, and location have not been checked against an identified source report in this repository.',
+  evidenceNote:'Unverified. Source report and page citation required before this becomes a Homer finding or an injury placement.',reviewStatus:'unverified',
   resolver:atlas=>numberedRibs(atlas,'right',[2,3,4,5]),
  },
  {
-  id:'right-ribs-8-10',section:'Rib cage',name:'Right ribs 8–10 fractures',shortName:'Right ribs 8–10',color:'#701d1d',
-  description:'Isolates the right eighth through tenth ribs for the documented lateral fracture group.',
-  evidenceNote:'ME audit: right ribs 8–10, lateral sectors.',
+  id:'right-ribs-8-10',section:'Rib cage',name:'Right ribs 8–10 reference',shortName:'Right ribs 8–10',color:'#701d1d',
+  description:'Inherited reference-anatomy group. Its case finding, rib levels, laterality, and location have not been checked against an identified source report in this repository.',
+  evidenceNote:'Unverified. Source report and page citation required before this becomes a Homer finding or an injury placement.',reviewStatus:'unverified',
   resolver:atlas=>numberedRibs(atlas,'right',[8,9,10]),
  },
  {
   id:'left-costal-cartilage-3-7',section:'Rib cage',name:'Left costal cartilage 3–7',shortName:'Costal cartilage 3–7',color:'#d97706',
-  description:'Isolates the left anterior costal cartilages from the third through seventh levels as reference anatomy for the documented findings.',
-  evidenceNote:'ME audit: all five left anterior costal cartilages 3–7.',
+  description:'Inherited reference-anatomy group. Its case finding, rib levels, laterality, and location have not been checked against an identified source report in this repository.',
+  evidenceNote:'Unverified. Source report and page citation required before this becomes a Homer finding or an injury placement.',reviewStatus:'unverified',
   resolver:atlas=>numberedCostalCartilage(atlas,'left',[3,4,5,6,7]),
  },
  {
-  id:'pulmonary-findings',section:'Chest',name:'Pulmonary injury reference',shortName:'Lungs',color:'#9f3b50',
-  description:'Isolates lung reference anatomy for the documented pulmonary contusions and pleural findings. Some findings remain source-only where the report does not support a precise surface marker.',
-  evidenceNote:'ME audit preserves source-only limitations for the left lingula, inferomedial right upper lobe, and side-unspecified pleural findings.',
+  id:'pulmonary-findings',section:'Chest',name:'Pulmonary reference',shortName:'Lungs',color:'#9f3b50',
+  description:'Inherited reference-anatomy group. Its case finding, rib levels, laterality, and location have not been checked against an identified source report in this repository.',
+  evidenceNote:'Unverified. Source report and page citation required before this becomes a Homer finding or an injury placement.',reviewStatus:'unverified',
   resolver:atlas=>fallback(conceptParts(atlas,name=>name==='lung'||name==='lungs'||name.includes(' lung'),'respiratory'),parts(atlas,(p,name)=>p.system==='respiratory'&&name.includes('lung'))),
  },
  {
-  id:'periaortic-findings',section:'Chest',name:'Periaortic injury reference',shortName:'Periaortic',color:'#b91c1c',
-  description:'Isolates the aortic reference structures associated with the two documented periaortic regions. The injury is in surrounding tissue, not a lesion asserted within the aorta itself.',
-  evidenceNote:'ME audit: both reported periaortic regions are retained as surrounding-tissue findings.',
+  id:'periaortic-findings',section:'Chest',name:'Periaortic reference',shortName:'Periaortic',color:'#b91c1c',
+  description:'Inherited reference-anatomy group. Its case finding, rib levels, laterality, and location have not been checked against an identified source report in this repository.',
+  evidenceNote:'Unverified. Source report and page citation required before this becomes a Homer finding or an injury placement.',reviewStatus:'unverified',
   resolver:atlas=>fallback(conceptParts(atlas,name=>name==='aorta'||name.includes('aorta'),'arterial'),parts(atlas,(p,name)=>p.system==='arterial'&&name.includes('aorta'))),
  },
 ];

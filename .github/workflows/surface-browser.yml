@@ -1,6 +1,7 @@
-name: Surface browser regression
+name: Integrated anatomy acceptance
 on:
   pull_request:
+    paths-ignore: ['docs/**', 'README.md', 'public/ATTRIBUTION.md']
   push:
     branches: [main]
 permissions:
@@ -8,10 +9,17 @@ permissions:
 jobs:
   surface:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        browser: [chromium, webkit]
+        scope: [desktop, mobile, registration]
     env:
       LIBGL_ALWAYS_SOFTWARE: '1'
       WEBKIT_DISABLE_DMABUF_RENDERER: '1'
+      ATLAS_BROWSER: ${{ matrix.browser }}
+      ATLAS_SCOPE: ${{ matrix.scope }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -23,25 +31,21 @@ jobs:
       - run: npm ci --no-audit --no-fund
       - run: npm run check && npm run build
       - name: Prepare inspectable build and source
-        run: tar -czf surface-debug.tar.gz dist app web scripts package.json package-lock.json
+        if: matrix.browser == 'chromium' && matrix.scope == 'desktop'
+        run: tar -czf anatomy-debug.tar.gz dist app web scripts package.json package-lock.json
       - name: Install browser tools outside the application
         run: |
-          npm install --prefix "$RUNNER_TEMP/surface-browser" --no-save --package-lock=false playwright@1.55.1
-          node "$RUNNER_TEMP/surface-browser/node_modules/playwright/cli.js" install --with-deps chromium webkit
-      - name: Open Body Surface in Chromium desktop and mobile
+          npm install --prefix "$RUNNER_TEMP/surface-browser" --no-save --package-lock=false playwright@1.55.1 pngjs@7.0.0
+          node "$RUNNER_TEMP/surface-browser/node_modules/playwright/cli.js" install --with-deps ${{ matrix.browser }}
+      - name: Inspect anatomy on desktop and mobile
         env:
           ATLAS_BROWSER_TOOLS: ${{ runner.temp }}/surface-browser
-        run: node scripts/check-surface-browser.mjs
-      - name: Open Body Surface in WebKit desktop and mobile
-        env:
-          ATLAS_BROWSER_TOOLS: ${{ runner.temp }}/surface-browser
-          ATLAS_BROWSER: webkit
         run: node scripts/check-surface-browser.mjs
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: surface-browser-evidence
+          name: anatomy-browser-evidence-${{ matrix.browser }}-${{ matrix.scope }}
           path: |
-            surface-debug.tar.gz
-            artifacts/surface/
-          retention-days: 3
+            anatomy-debug.tar.gz
+            artifacts/refinement/
+          retention-days: 14
