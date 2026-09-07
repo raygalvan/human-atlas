@@ -70,3 +70,5 @@
 }
 /* Catalogue and match lists scroll inside the panel even where the older mobile rules let lists grow. */
 .studio .layers-panel.mobile-open .injury-list.catalogue-list,.studio .layers-panel.mobile-open .injury-list.results-list,.studio .layers-panel .injury-list.catalogue-list,.studio .layers-panel .injury-list.results-list{overflow-y:auto;flex-shrink:0}
+/* The host floats a 44px workspace button at the top-left of the viewer on phones. */
+@media(max-width:767px){.studio.embedded .identity{left:68px}.studio.embedded h1{max-width:calc(100vw - 148px)}}
