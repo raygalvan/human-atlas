@@ -12,4 +12,11 @@ assert.equal(parseInjuryBotHostMessage({type:'injurybot:atlas:init',version:INJU
 assert.equal(parseInjuryBotHostMessage({type:'injurybot:atlas:init',version:INJURYBOT_ATLAS_PROTOCOL,case:{id:'c',title:'T',client:'',findings:[],activeReferenceGroups:[]}}),null);
 assert.equal(parseInjuryBotHostMessage({type:'injurybot:atlas:init',version:99,case:{}}),null);
 assert.equal(parseInjuryBotHostMessage({type:'injurybot:atlas:init',version:1,case:{id:'x',title:'x',findings:[{id:'f',anatomicalStructure:'rib',sourceStatus:'verified',placementStatus:'approved',renderStatus:'approved',sourceIds:[]}],activeReferenceGroups:[]}}),null);
+const applied=parseInjuryBotHostMessage({type:'injurybot:atlas:init',version:INJURYBOT_ATLAS_PROTOCOL,case:{id:'c',title:'T',findings:[],activeReferenceGroups:[],appliedInjuries:[{id:'left-ribs-2-4',hidden:true},{id:'brain-hemorrhage'}],generatedInjuries:[{id:'g1',name:'Femur fracture',status:'queued'}]}});
+assert.deepEqual(applied?.case.appliedInjuries,[{id:'left-ribs-2-4',hidden:true},{id:'brain-hemorrhage',hidden:false}]);
+assert.deepEqual(applied?.case.generatedInjuries,[{id:'g1',name:'Femur fracture',status:'queued'}]);
+assert.equal(parseInjuryBotHostMessage({type:'injurybot:atlas:init',version:INJURYBOT_ATLAS_PROTOCOL,case:{id:'c',title:'T',findings:[],activeReferenceGroups:[],generatedInjuries:[{id:'g1',name:'x',status:'done'}]}}),null);
+assert.deepEqual(parseInjuryBotHostMessage({type:'injurybot:atlas:match-result',version:INJURYBOT_ATLAS_PROTOCOL,requestId:'r1',matches:['brain-hemorrhage'],unmatched:null}),{type:'injurybot:atlas:match-result',version:INJURYBOT_ATLAS_PROTOCOL,requestId:'r1',matches:['brain-hemorrhage'],unmatched:null});
+assert.equal(parseInjuryBotHostMessage({type:'injurybot:atlas:match-result',version:INJURYBOT_ATLAS_PROTOCOL,requestId:'r1',matches:[''],unmatched:null}),null);
+assert.equal(parseInjuryBotHostMessage({type:'injurybot:atlas:generation',version:INJURYBOT_ATLAS_PROTOCOL,caseId:'c',injury:{id:'g1',name:'Femur fracture',status:'ready'}})?.injury.status,'ready');
 console.log('Verified Injury.bot host configuration, origin parsing, protocol version, and case payload validation.');
