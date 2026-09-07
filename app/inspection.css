@@ -3,3 +3,5 @@
 
 /* Keep patient axes visible above the portrait drawer during inspection. */
 @media(max-width:767px) and (orientation:portrait){.studio:has(.layers-panel.mobile-open) .orientation-compass{top:112px;bottom:auto}}
+
+@media(min-width:768px){.studio .layers-panel:has(.fracture-controls[open]){overflow-y:auto;overscroll-behavior:contain}.studio .layers-panel:has(.fracture-controls[open])>.panel-tabs{flex-shrink:0}}

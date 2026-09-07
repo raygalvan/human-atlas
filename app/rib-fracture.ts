@@ -43,5 +43,5 @@ export function fractureGeometry(source:T.BufferGeometry,parentIndex:number){
    }
   }
  }
- const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(points,3));g.setAttribute('normal',new T.Float32BufferAttribute(normals,3));g.setAttribute('color',new T.Float32BufferAttribute(colors,3));g.setAttribute('partIndex',new T.Float32BufferAttribute(new Array(points.length/3).fill(parentIndex),1));g.setIndex(new T.BufferAttribute(Uint32Array.from({length:points.length/3},(_,i)=>i),1));g.computeBoundingBox();g.computeBoundingSphere();g.userData.fractureFaces=faces;return g;
+ const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(points,3));g.setAttribute('normal',new T.BufferAttribute(Int16Array.from(normals,n=>Math.round(T.MathUtils.clamp(n,-1,1)*32767)),3,true));g.setAttribute('color',new T.Float32BufferAttribute(colors,3));g.setAttribute('partIndex',new T.Float32BufferAttribute(new Array(points.length/3).fill(parentIndex),1));g.setIndex(new T.BufferAttribute(Uint32Array.from({length:points.length/3},(_,i)=>i),1));g.computeBoundingBox();g.computeBoundingSphere();g.userData.fractureFaces=faces;return g;
 }
