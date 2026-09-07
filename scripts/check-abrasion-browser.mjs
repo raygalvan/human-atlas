@@ -21,7 +21,7 @@ const entry=`http://127.0.0.1:${server.address().port}${prefix}`;
 const browser=await chromium.launch({args:['--use-angle=swiftshader','--enable-unsafe-swiftshader','--no-sandbox']});
 const context=await browser.newContext({viewport:{width:1200,height:850},recordVideo:{dir:output+'/video',size:{width:1200,height:850}}});
 const page=await context.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message));page.on('console',m=>{if(m.type()==='error')errors.push(m.text());});page.setDefaultTimeout(90000);
-const capture=async name=>{await page.waitForTimeout(700);const b=await page.screenshot({path:output+'/'+name+'.png',timeout:90000});const p=PNG.sync.read(b);let red=0;for(let i=0;i<p.data.length;i+=4){const [r,g,b]=p.data.subarray(i,i+3);if(r>g*1.45&&r>b*1.6&&r>60&&g<155)red++;}console.log(name,red);return red;};
+const capture=async name=>{await page.waitForTimeout(700);const b=await page.screenshot({path:output+'/'+name+'.png',timeout:90000});const p=PNG.sync.read(b);let red=0;for(let i=0;i<p.data.length;i+=4){const x=(i/4)%p.width,y=Math.floor(i/4/p.width);if(x<350||y<130||y>p.height-80)continue;const [r,g,b]=p.data.subarray(i,i+3);if(r>g*1.45&&r>b*1.6&&r>60&&g<155)red++;}console.log(name,red);return red;};
 try {
  await page.goto(entry+'?test=abrasion');await page.locator('.loading').waitFor({state:'hidden',timeout:150000});
  await page.waitForFunction(()=>document.querySelector('.scene')?.dataset.abrasionVisible==='true');
