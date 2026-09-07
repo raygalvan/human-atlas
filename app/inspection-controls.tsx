@@ -9,8 +9,8 @@ export function InspectionControls({atlas,state,detailStatus,onInspect,onChange,
  const groups=inspectionGroups(atlas),mode=state.inspection,head=mode==='brain'||mode==='relationship';
  const developer=new URLSearchParams(location.search).get('developer')==='registration';
  return <details className="inspection-controls" open={mode?true:undefined}>
-  <summary>Inspect anatomy</summary>
-  <div className="inspection-presets">{([['brain','Brain'],['skull','Skull'],['relationship','Brain + skull'],['rib','Left rib 2']] as [Inspection,string][]).map(([id,name])=><Button key={id} variant="ghost" aria-pressed={mode===id} onClick={()=>onInspect(id)}>{name}</Button>)}</div>
+  <summary>Reference views</summary>
+  <div className="inspection-presets">{([['brain','Brain'],['skull','Skull'],['relationship','Brain + skull'],['ribcage','Rib cage'],['rib','Left rib 2']] as [Inspection,string][]).map(([id,name])=><Button key={id} variant="ghost" aria-pressed={mode===id} onClick={()=>onInspect(id)}>{name}</Button>)}</div>
   {mode&&<div className="inspection-options">
    <div className="inspection-option"><label htmlFor="source-detail">Original source detail</label><Switch id="source-detail" checked={state.sourceDetail!==false} onCheckedChange={value=>onChange({sourceDetail:!!value})}/></div>
    <p className="detail-status" role="status">{detailStatus==='loading'?'Loading source geometry…':detailStatus==='ready'?'Original geometry active':detailStatus==='unavailable'?'Detail unavailable. Base anatomy remains active.':'Browser geometry active'}</p>

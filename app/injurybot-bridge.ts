@@ -12,6 +12,7 @@ export interface HostedFindingSummary {
 export interface HostedCaseContext {
  id:string;
  title:string;
+ client?:string;
  matterNumber?:string;
  findings:HostedFindingSummary[];
  activeReferenceGroups:string[];
@@ -20,7 +21,7 @@ export interface HostedCaseContext {
 export interface InjuryBotHostConfig {
  embedded:boolean;
  parentOrigin:string|null;
- initialCase:{id:string;title:string}|null;
+ initialCase:{id:string;title:string;client?:string}|null;
 }
 
 export type InjuryBotHostMessage={type:'injurybot:atlas:init';version:typeof INJURYBOT_ATLAS_PROTOCOL;case:HostedCaseContext};
@@ -35,16 +36,16 @@ export function readInjuryBotHostConfig(search:string):InjuryBotHostConfig {
  const params=new URLSearchParams(search),embedded=params.get('embed')==='injurybot';
  let parentOrigin:string|null=null;
  try {const value=params.get('parentOrigin');if(value)parentOrigin=new URL(value).origin;}catch{/* Invalid origins never become trusted. */}
- const id=bounded(params.get('caseId'),120),title=bounded(params.get('caseTitle'),160);
- return {embedded,parentOrigin:embedded?parentOrigin:null,initialCase:embedded&&id&&title?{id,title}:null};
+ const id=bounded(params.get('caseId'),120),title=bounded(params.get('caseTitle'),160),client=bounded(params.get('caseClient'),160);
+ return {embedded,parentOrigin:embedded?parentOrigin:null,initialCase:embedded&&id&&title?{id,title,...(client?{client}:{})}:null};
 }
 
 export function parseInjuryBotHostMessage(value:unknown):InjuryBotHostMessage|null {
  if(!value||typeof value!=='object'||Array.isArray(value))return null;
  const message=value as Record<string,unknown>;
  if(message.type!=='injurybot:atlas:init'||message.version!==INJURYBOT_ATLAS_PROTOCOL||!message.case||typeof message.case!=='object'||Array.isArray(message.case))return null;
- const source=message.case as Record<string,unknown>,id=bounded(source.id,120),title=bounded(source.title,160),matterNumber=source.matterNumber===undefined?undefined:bounded(source.matterNumber,120);
- if(!id||!title||matterNumber===null||!Array.isArray(source.findings)||!Array.isArray(source.activeReferenceGroups))return null;
+ const source=message.case as Record<string,unknown>,id=bounded(source.id,120),title=bounded(source.title,160),matterNumber=source.matterNumber===undefined?undefined:bounded(source.matterNumber,120),client=source.client===undefined?undefined:bounded(source.client,160);
+ if(!id||!title||matterNumber===null||client===null||!Array.isArray(source.findings)||!Array.isArray(source.activeReferenceGroups))return null;
  const findings:HostedFindingSummary[]=[];
  for(const item of source.findings){
   if(!item||typeof item!=='object'||Array.isArray(item))return null;
@@ -54,7 +55,7 @@ export function parseInjuryBotHostMessage(value:unknown):InjuryBotHostMessage|nu
   findings.push({id:findingId,anatomicalStructure:structure,sourceStatus:finding.sourceStatus as HostedFindingSummary['sourceStatus'],placementStatus:finding.placementStatus as HostedFindingSummary['placementStatus'],renderStatus:finding.renderStatus as HostedFindingSummary['renderStatus'],sourceIds:sourceIds as string[]});
  }
  const groups=source.activeReferenceGroups.map(value=>bounded(value,120));if(groups.length>50||groups.some(value=>!value))return null;
- return {type:'injurybot:atlas:init',version:INJURYBOT_ATLAS_PROTOCOL,case:{id,title,...(matterNumber?{matterNumber}:{}),findings,activeReferenceGroups:groups as string[]}};
+ return {type:'injurybot:atlas:init',version:INJURYBOT_ATLAS_PROTOCOL,case:{id,title,...(client?{client}:{}),...(matterNumber?{matterNumber}:{}),findings,activeReferenceGroups:groups as string[]}};
 }
 
 export function connectInjuryBotHost(config:InjuryBotHostConfig,onContext:(context:HostedCaseContext)=>void){
