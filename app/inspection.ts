@@ -1,5 +1,5 @@
 import type {Atlas,Part,SceneState} from './anatomy';
-export type Inspection = 'brain'|'skull'|'relationship'|'rib';
+export type Inspection = 'brain'|'skull'|'relationship'|'rib'|'ribcage';
 export type DetailStatus = 'base'|'loading'|'ready'|'unavailable';
 export const SOURCE_REGISTRATION='bodyparts3d-4.0-meters-y-up-v1';
 export function inspectionGroups(atlas:Atlas){
@@ -11,7 +11,7 @@ export function inspectionGroups(atlas:Atlas){
  const left=concept('FMA61819').filter(id=>brainSet.has(id)),right=concept('FMA67292').filter(id=>brainSet.has(id));
  const cerebellum=concept('FMA67944').filter(id=>brainSet.has(id)),brainstem=concept('FMA79876').filter(id=>brainSet.has(id));
  const assigned=new Set([...left,...right,...cerebellum,...brainstem]);
- return {brain,skull,relationship:[...new Set([...brain,...skull])],rib:concept('FMA8012'),components:[
+ return {brain,skull,relationship:[...new Set([...brain,...skull])],rib:concept('FMA8012'),ribcage:concept('FMA7480'),components:[
   {id:'left',name:'Left cerebral hemisphere',ids:left},
   {id:'right',name:'Right cerebral hemisphere',ids:right},
   {id:'cerebellum',name:'Cerebellum',ids:cerebellum},
@@ -37,4 +37,4 @@ export function anatomyColor(part:Part,brainIds:Set<string>):string|undefined{
 }
 
 /** Stable targets for synthetic developer fixtures, never case findings. */
-export function registrationTarget(mode?:Inspection|null){return mode==='rib'?'FJ3229':mode==='skull'?'FJ3200':'FJ1833';}
+export function registrationTarget(mode?:Inspection|null){return mode==='rib'||mode==='ribcage'?'FJ3229':mode==='skull'?'FJ3200':'FJ1833';}

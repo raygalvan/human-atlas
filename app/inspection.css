@@ -4,4 +4,4 @@
 /* Keep patient axes visible above the portrait drawer during inspection. */
 @media(max-width:767px) and (orientation:portrait){.studio:has(.layers-panel.mobile-open) .orientation-compass{top:112px;bottom:auto}}
 
-@media(min-width:768px){.studio .layers-panel:has(:is(.fracture-controls,.sah-controls)[open]){overflow-y:auto;overscroll-behavior:contain}.studio .layers-panel:has(:is(.fracture-controls,.sah-controls)[open])>.panel-tabs{flex-shrink:0}}
+@media(min-width:768px){.studio .layers-panel:has(:is(.inspection-controls,.fracture-controls,.sah-controls)[open]){overflow-y:auto;overscroll-behavior:contain}.studio .layers-panel:has(:is(.inspection-controls,.fracture-controls,.sah-controls)[open])>.panel-tabs{flex-shrink:0}.studio .layers-panel:has(:is(.inspection-controls,.fracture-controls,.sah-controls)[open]) :is(.system-list,.injury-list){flex-shrink:0;overflow:visible}}

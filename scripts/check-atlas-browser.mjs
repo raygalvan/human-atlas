@@ -25,7 +25,7 @@ const settle=page=>page.waitForTimeout(450);
 async function loaded(page,url=entry){const start=Date.now();await page.goto(url,{waitUntil:'domcontentloaded',timeout:90000});await page.waitForFunction(()=>document.querySelector('canvas')&&!document.querySelector('.loading'),{},{timeout:150000});return Date.now()-start;}
 async function layers(page){if(!await page.getByRole('tab',{name:'Systems',exact:true}).isVisible())await page.getByRole('button',{name:'Open atlas layers',exact:true}).click();}
 async function inspect(page,name){await layers(page);const summary=page.locator('.inspection-controls summary');if(!await page.getByRole('button',{name:'Brain',exact:true}).isVisible())await summary.click();await page.getByRole('button',{name,exact:true}).click();}
-async function closeLayers(page,mobile){if(mobile&&await page.getByRole('tab',{name:'Systems',exact:true}).isVisible())await page.getByRole('button',{name:'Open atlas layers',exact:true}).click();await settle(page);}
+async function closeLayers(page,mobile){if(mobile&&await page.getByRole('tab',{name:'Systems',exact:true}).isVisible())await page.getByRole('button',{name:'Minimize explore panel',exact:true}).click();await settle(page);}
 async function overlay(page,visible){await page.waitForFunction(value=>document.querySelector('.scene')?.dataset.overlayVisible===String(value),visible,{timeout:45000});}
 async function detail(page,count){await page.waitForFunction(n=>Number(document.querySelector('.scene')?.dataset.detailParts)===n,count,{timeout:90000});}
 async function capture(page,name){await settle(page);const png=await page.screenshot({path:path.join(output,name+'.png'),timeout:90000});const image=PNG.sync.read(png);assert(image.width>300&&image.height>300);return png;}
@@ -54,15 +54,15 @@ try{
    assert.equal(await page.getByRole('tab',{name:'Body Surface',exact:true}).count(),0);assert.equal(await page.getByRole('switch',{name:'Synthetic registration patch',exact:true}).count(),0);
    // Real user toggles, including three full round trips, retain both tab states.
    for(let repeat=0;repeat<3;repeat++){
-    await layers(page);await page.getByRole('tab',{name:/Homer.s Injuries/}).click();
+    await layers(page);await page.getByRole('tab',{name:/^Injuries/}).click();
     await page.getByRole('button',{name:'Brain reference',exact:true}).click();await detail(page,54);
     await page.getByRole('switch',{name:'Show Left ribs 2–4 reference',exact:true}).click();
     await page.getByRole('tab',{name:'Systems',exact:true}).click();
-    await page.getByRole('tab',{name:/Homer.s Injuries/}).click();assert.equal(await page.getByRole('switch',{name:'Show Left ribs 2–4 reference',exact:true}).getAttribute('aria-checked'),'true');
+    await page.getByRole('tab',{name:/^Injuries/}).click();assert.equal(await page.getByRole('switch',{name:'Show Left ribs 2–4 reference',exact:true}).getAttribute('aria-checked'),'true');
     await page.getByRole('button',{name:'Clear injuries',exact:true}).click();await page.getByRole('tab',{name:'Systems',exact:true}).click();
    }
    for(const [name,slug,count] of [['Brain','brain',59],['Skull','skull',18],['Left rib 2','rib',1]]){
-    await inspect(page,name);await detail(page,count);if(mobile&&slug==='brain'){if(label==='phone-portrait'){const panel=await page.locator('.layers-panel').boundingBox(),axes=await page.locator('.orientation-compass').boundingBox();assert(panel.y>220,'Portrait Layers must leave usable space for anatomy');assert(axes.y+axes.height<panel.y,'Patient axes must stay above the portrait drawer');}await capture(page,`${label}-brain-layers-open`);}await closeLayers(page,mobile);
+    await inspect(page,name);await detail(page,count);if(mobile&&slug==='brain'){if(label==='phone-portrait'){const panel=await page.locator('.layers-panel').boundingBox(),size=page.viewportSize();assert(panel.y<=1&&panel.height>=size.height-2,'Portrait Explore must open full screen');assert(await page.getByRole('button',{name:'Minimize explore panel',exact:true}).isVisible(),'Full-screen Explore needs its minimize control');}await capture(page,`${label}-brain-layers-open`);}await closeLayers(page,mobile);
     const before=await capture(page,`${label}-${slug}`),orbitMs=await orbit(page,mobile),after=await capture(page,`${label}-${slug}-orbit`);assert.notDeepEqual(before,after,'Orbit must change the rendered anatomy');
     measurements.push({label,structure:name,orbitActionAndSettleMs:orbitMs,diagnostics:await page.locator('.scene').evaluate(el=>({...el.dataset})),input:mobile&&engine==='chromium'?'Emulated touch orbit and two-finger pinch':'Mouse orbit'});
     // Direct canvas picking must open a real named source structure.

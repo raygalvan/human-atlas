@@ -31,14 +31,35 @@
     font-size: 12px;
   }
   .studio .scene-caption { display: none; }
+  /* Explore opens full screen; its own bar minimizes it back to the model. */
   .studio .layers-panel.mobile-open {
-    top: auto;
-    bottom: calc(84px + env(safe-area-inset-bottom));
-    left: 12px;
-    right: 12px;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
     width: auto;
-    max-height: min(40dvh, max(160px, calc(100dvh - 380px - env(safe-area-inset-bottom))));
-    padding: 12px 14px 0;
+    max-height: none;
+    border: 0;
+    border-radius: 0;
+    padding: max(8px, env(safe-area-inset-top)) 16px 0;
+    z-index: 60;
+  }
+  .studio .layers-panel.mobile-open .panel-bar {
+    display: flex;
+    position: sticky;
+    top: 0;
+    background: #fffffff5;
+    z-index: 1;
+  }
+  /* The whole panel scrolls, so open Reference views never push controls
+     off screen or under the footer. */
+  .studio .layers-panel.mobile-open {
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+  .studio .layers-panel.mobile-open :is(.system-list, .injury-list) {
+    flex-shrink: 0;
+    overflow: visible;
   }
   .studio .system-list,
   .studio .injury-list { min-height: 0; overflow-y: auto; }
@@ -46,9 +67,9 @@
 }
 @media (max-width: 1024px) and (max-height: 600px) and (orientation: landscape) and (pointer: coarse) {
   .studio .layers-panel.mobile-open {
-    top: 12px;
-    max-height: calc(100dvh - 100px - env(safe-area-inset-bottom));
-    width: min(320px, calc(100vw - 24px));
-    right: auto;
+    top: 0;
+    max-height: none;
+    width: auto;
+    right: 0;
   }
 }
