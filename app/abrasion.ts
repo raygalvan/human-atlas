@@ -53,12 +53,12 @@ export function abrasionMaterial(partTexture:T.DataTexture,width:number){
   shader.fragmentShader=shader.fragmentShader.replace('#include <clipping_planes_fragment>','#include <clipping_planes_fragment>\nif(parentVisible<.5)discard;');
   shader.fragmentShader=shader.fragmentShader.replace('#include <color_fragment>',`#include <color_fragment>
    vec2 q=(abrasionPosition.xy-vec2(.172,1.397))*1000.;
-   float coarse=grain(q*.19),fine=grain(q*2.1);
-   float scrape=grain(vec2(q.x*1.5,(q.y+q.x*.32)*.085));
-   float islands=smoothstep(.66,.83,coarse+.12*scrape);
-   vec3 raw=mix(vec3(.22,.028,.02),vec3(.58,.16,.12),coarse);
-   raw=mix(raw,vec3(.72,.34,.25),smoothstep(.49,.73,scrape)*.6);
-   raw=mix(raw,vec3(.045,.014,.009),smoothstep(.73,.91,fine)*.7);
+   float coarse=grain(q*.24),fine=grain(q*2.1);
+   float scrape=grain(vec2(q.x*.85,(q.y+q.x*.32)*.27));
+   float islands=smoothstep(.75,.93,coarse+.08*scrape);
+   vec3 raw=mix(vec3(.17,.025,.018),vec3(.48,.10,.07),coarse);
+   raw=mix(raw,vec3(.72,.34,.25),smoothstep(.49,.78,scrape)*.32);
+   raw=mix(raw,vec3(.045,.014,.009),smoothstep(.58,.88,fine)*.5);
    diffuseColor.rgb=mix(raw,vec3(.48,.30,.18),islands*.85);
   `);
  };
