@@ -1,6 +1,6 @@
 # Synthetic subarachnoid hemorrhage capability test
 
-Open `?test=sah` or Layers → Test 3 → Start hemorrhage test. The actual reference brain remains in the atlas. Toggle the synthetic blood collection, compare Skull on / Skull cutaway / Isolate brain, rotate 360°, zoom, and explode/reassemble using the test slider.
+Open `?test=sah` or Layers → Test 3 → Start hemorrhage test. The actual reference brain remains in the atlas. Toggle the synthetic blood collection, compare Skull on / Skull cutaway / Isolate brain, rotate 360°, use Inspect blood and zoom, and explode/reassemble using the test slider.
 
 This authored example occupies a limited area of the left frontal convexity and follows modeled sulcal surfaces. Stable parents are FJ1833 (left superior frontal gyrus), FJ1787 (left middle frontal gyrus), and FJ1800 (left precentral gyrus). The footprint is deliberately irregular and does not color entire structures. Source coordinate convention is meters, +X patient left, +Y superior, +Z anterior.
 

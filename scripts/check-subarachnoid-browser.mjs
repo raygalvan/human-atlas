@@ -31,7 +31,7 @@ try {
  await page.getByRole('button',{name:'Skull on',exact:true}).click();await page.waitForTimeout(1200);assert(await capture('05-skull-on')<80,'Opaque skull must obscure the collection');
  await page.getByRole('button',{name:'Skull cutaway',exact:true}).click();assert(await capture('06-skull-revealed')>200);
  await page.getByRole('button',{name:'Isolate brain',exact:true}).click();assert(await capture('07-brain-isolated')>200);
- await page.mouse.move(750,400);await page.mouse.wheel(0,-200);await capture('08-close-up');
+ await page.getByRole('button',{name:'Inspect blood',exact:true}).click();await page.mouse.move(750,400);await page.mouse.wheel(0,-200);assert(await capture('08-close-up')>blood*2,'Close inspection must substantially enlarge the visible collection');
  await page.getByRole('switch',{name:'Original source detail',exact:true}).click();await capture('09-base-topology');assert.equal(await page.locator('.scene').getAttribute('data-sah-parts'),'3');
  await page.getByRole('switch',{name:'Original source detail',exact:true}).click();await capture('10-source-topology');
  await page.getByRole('switch',{name:'Show left cerebral hemisphere',exact:true}).click();await page.waitForFunction(()=>document.querySelector('.scene')?.dataset.sahVisible==='false');assert(await capture('11-parent-hidden')<50);
