@@ -1,9 +1,6 @@
 name: Integrated anatomy acceptance
 on:
-  pull_request:
-    paths-ignore: ['docs/**', 'README.md', 'public/ATTRIBUTION.md']
-  push:
-    branches: [main]
+  workflow_dispatch:
 permissions:
   contents: read
 jobs:

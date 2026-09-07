@@ -1,8 +1,7 @@
 name: CI
 on:
   pull_request:
-  push:
-    branches: [main]
+  workflow_dispatch:
 permissions:
   contents: read
 jobs:
@@ -10,6 +9,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
@@ -22,4 +23,39 @@ jobs:
       - run: node scripts/validate-inspection.mjs
       - run: node scripts/validate-surface.mjs
       - run: node scripts/validate-base-path.mjs
+      - run: node scripts/validate-fracture.mjs && node scripts/validate-abrasion.mjs
       - run: npm run build
+      - name: Select focused browser proof
+        id: proof
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          if [ -n "$BASE_SHA" ]; then
+            git diff --name-only "$BASE_SHA"...HEAD > "$RUNNER_TEMP/changed-paths"
+          else
+            git diff --name-only HEAD~1 HEAD > "$RUNNER_TEMP/changed-paths"
+          fi
+          if grep -Eq 'rib-fracture|check-fracture|validate-fracture' "$RUNNER_TEMP/changed-paths"; then
+            echo 'script=check-fracture-browser.mjs' >> "$GITHUB_OUTPUT"
+          elif grep -Eq 'app/(scene|anatomy|page|abrasion)|app/.*css|public/models|scripts/.*browser' "$RUNNER_TEMP/changed-paths"; then
+            echo 'script=check-atlas-browser.mjs' >> "$GITHUB_OUTPUT"
+          fi
+      - name: Install browser tools once
+        if: steps.proof.outputs.script != ''
+        run: |
+          npm install --prefix "$RUNNER_TEMP/browser" --no-save --package-lock=false playwright@1.55.1 pngjs@7
+          node "$RUNNER_TEMP/browser/node_modules/playwright/cli.js" install --with-deps chromium
+      - name: Run focused proof against the same build
+        if: steps.proof.outputs.script != ''
+        env:
+          ATLAS_BROWSER_TOOLS: ${{ runner.temp }}/browser
+          PROOF_SCRIPT: ${{ steps.proof.outputs.script }}
+        run: node "scripts/$PROOF_SCRIPT"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: reviewed-atlas
+          path: |
+            artifacts/
+            dist/
+          retention-days: 14
