@@ -44,7 +44,23 @@
     padding: max(8px, env(safe-area-inset-top)) 16px 0;
     z-index: 60;
   }
-  .studio .layers-panel.mobile-open .panel-bar { display: flex; }
+  .studio .layers-panel.mobile-open .panel-bar {
+    display: flex;
+    position: sticky;
+    top: 0;
+    background: #fffffff5;
+    z-index: 1;
+  }
+  /* The whole panel scrolls, so open Reference views never push controls
+     off screen or under the footer. */
+  .studio .layers-panel.mobile-open {
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+  .studio .layers-panel.mobile-open :is(.system-list, .injury-list) {
+    flex-shrink: 0;
+    overflow: visible;
+  }
   .studio .system-list,
   .studio .injury-list { min-height: 0; overflow-y: auto; }
 
