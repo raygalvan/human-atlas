@@ -39,5 +39,7 @@ try {
  await explode.press('Home');await page.waitForTimeout(2500);await page.getByRole('switch',{name:'Show test abrasion',exact:true}).click();await page.waitForFunction(()=>document.querySelector('.scene')?.dataset.abrasionVisible==='false');assert(await capture('07-clean')<100);
  await page.getByRole('switch',{name:'Show test abrasion',exact:true}).click();await page.getByRole('button',{name:'Whole body',exact:true}).click();await capture('08-whole-body');
  await page.getByRole('button',{name:'Focus shoulder',exact:true}).click();await capture('09-final');
+ await page.setViewportSize({width:390,height:600});await page.getByRole('button',{name:'Open atlas layers',exact:true}).click();await page.waitForTimeout(700);await page.screenshot({path:output+'/10-mobile-layers.png',timeout:90000});
+ await page.getByRole('button',{name:'Exit abrasion test',exact:true}).click();await page.waitForFunction(()=>document.querySelector('.scene')?.dataset.abrasionVisible==='false');
  assert.deepEqual(errors,[]);console.log('PASS abrasion geometry, 360 rotation, zoom, skin toggle, explosion, clean skin');
 }finally{await context.close();await browser.close();server.close();}

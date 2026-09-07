@@ -30,3 +30,11 @@ The default presentation contains no abrasion. The test controls live in Layers;
 `node scripts/validate-abrasion.mjs` checks every overlay vertex against its recorded parent triangle, barycentric containment, patient-left/posterior placement, nonplanarity, and parent indexing. Existing catalogue, inspection, interaction, injury-reference, surface-removal and nested-path validations also pass locally, as do TypeScript and production build.
 
 `scripts/check-abrasion-browser.mjs` exercises the real production bundle under `/courtroom-atlas/`, captures a full rotation video and screenshots, and checks visible abrasion pixels, rotation, zoom, skin off/on, explosion, and clean skin. Browser-run results and visual review are recorded with the PR. These are CI software-rendering tests, not a physical-device performance claim.
+
+## Captured proof
+
+![Actual shoulder abrasion](shoulder.png)
+
+[Full browser recording, normal playback speed](abrasion-test.mp4) · [Exploded](exploded.png) · [Clean skin](clean.png)
+
+The Chromium run [34068681399](https://github.com/raygalvan/human-atlas/actions/runs/34068681399) passed the complete sequence. The injury-pixel count was 43,754 before and after the full turn, 48,458 after zoom and skin restoration, and zero with skin off or the abrasion disabled. Screenshots and rotation frames were visually inspected. The recording is from that revision; subsequent camera housekeeping restores the ordinary viewport on exit and positions the shoulder above the mobile Layers drawer. No asset or wound appearance changed.
