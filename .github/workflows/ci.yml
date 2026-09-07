@@ -23,6 +23,7 @@ jobs:
       - run: node scripts/validate-inspection.mjs
       - run: node scripts/validate-surface.mjs
       - run: node scripts/validate-base-path.mjs
+      - run: node scripts/validate-injurybot-bridge.mjs
       - run: node scripts/validate-fracture.mjs && node scripts/validate-abrasion.mjs
       - run: node scripts/validate-subarachnoid.mjs
       - run: npm run build
