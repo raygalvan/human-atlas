@@ -24,6 +24,7 @@ jobs:
       - run: node scripts/validate-surface.mjs
       - run: node scripts/validate-base-path.mjs
       - run: node scripts/validate-fracture.mjs && node scripts/validate-abrasion.mjs
+      - run: node scripts/validate-subarachnoid.mjs
       - run: npm run build
       - name: Select focused browser proof
         id: proof
@@ -35,7 +36,9 @@ jobs:
           else
             git diff --name-only HEAD~1 HEAD > "$RUNNER_TEMP/changed-paths"
           fi
-          if grep -Eq 'rib-fracture|check-fracture|validate-fracture' "$RUNNER_TEMP/changed-paths"; then
+          if grep -Eq 'subarachnoid' "$RUNNER_TEMP/changed-paths"; then
+            echo 'script=check-subarachnoid-browser.mjs' >> "$GITHUB_OUTPUT"
+          elif grep -Eq 'rib-fracture|check-fracture|validate-fracture' "$RUNNER_TEMP/changed-paths"; then
             echo 'script=check-fracture-browser.mjs' >> "$GITHUB_OUTPUT"
           elif grep -Eq 'app/(scene|anatomy|page|abrasion)|app/.*css|public/models|scripts/.*browser' "$RUNNER_TEMP/changed-paths"; then
             echo 'script=check-atlas-browser.mjs' >> "$GITHUB_OUTPUT"
