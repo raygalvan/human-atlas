@@ -93,6 +93,10 @@ See [geometry and browser review](docs/geometry-review/REVIEW.md) for source com
 
 The project builds to static files in `dist/`. This fork is configured with relative asset paths so it can live under an existing website path such as `/courtroom-atlas/` without a separate hosting account.
 
+### Injury.bot host bridge
+
+The viewer can run inside Injury.bot with `?embed=injurybot&parentOrigin=<origin>&caseId=<id>&caseTitle=<title>`. Embedded mode hides the three synthetic capability-test panels and uses the versioned `postMessage` contract in `app/injurybot-bridge.ts` for case context, readiness, and anatomy selections. The exact parent origin is required; wildcard command origins are not accepted. Injury.bot sends no placement or rendering instruction unless its independent review status permits it.
+
 ## License
 
 Original application code is released under the [MIT License](LICENSE). **The anatomy data has its own CC BY 4.0 license**; preserve the attribution when redistributing it. Third-party dependencies retain their respective licenses.
