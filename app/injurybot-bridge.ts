@@ -11,7 +11,7 @@ export interface HostedFindingSummary {
 /** An injury the host has applied to this case. `id` is a catalogue id. */
 export interface AppliedInjury {id:string;hidden:boolean}
 /** An injury the host is generating for this case (no catalogue entry yet). */
-export interface GeneratedInjury {id:string;name:string;status:'queued'|'generating'|'ready'|'failed'}
+export interface GeneratedInjury {id:string;name:string;status:'queued'|'generating'|'ready'|'failed';stage?:string}
 
 export interface HostedCaseContext {
  id:string;
@@ -22,7 +22,7 @@ export interface HostedCaseContext {
  activeReferenceGroups:string[];
  appliedInjuries:AppliedInjury[];
  generatedInjuries:GeneratedInjury[];
- productionInjuries?:{id:string;parentId:string;url:string;hidden:boolean;mode:"overlay"|"replacement"}[];
+ productionInjuries?:{id:string;name?:string;parentId:string;url:string;hidden:boolean;mode:"overlay"|"replacement"}[];
 }
 
 export interface InjuryBotHostConfig {
@@ -58,7 +58,7 @@ function parseGenerated(value:unknown):GeneratedInjury|null{
  if(!isRecord(value))return null;
  const id=bounded(value.id,120),name=bounded(value.name,160);
  if(!id||!name||!validStatus(value.status,['queued','generating','ready','failed']))return null;
- return {id,name,status:value.status as GeneratedInjury['status']};
+ return {id,name,status:value.status as GeneratedInjury['status'],...(bounded(value.stage,500)?{stage:value.stage as string}:{})};
 }
 
 export function parseInjuryBotHostMessage(value:unknown):InjuryBotHostMessage|null {
@@ -95,7 +95,7 @@ export function parseInjuryBotHostMessage(value:unknown):InjuryBotHostMessage|nu
  const productionInjuries:NonNullable<HostedCaseContext['productionInjuries']>=[];
  if(source.productionInjuries!==undefined){
  if(!Array.isArray(source.productionInjuries)||source.productionInjuries.length>50)return null;
- for(const entry of source.productionInjuries){if(!isRecord(entry)||!bounded(entry.id,120)||!bounded(entry.parentId,120)||typeof entry.url!=='string'||!/^\/api\/cases\/[a-zA-Z0-9_-]+\/production\/[a-zA-Z0-9_-]+\/geometry$/.test(entry.url)||!['overlay','replacement'].includes(String(entry.mode)))return null;productionInjuries.push({id:entry.id as string,parentId:entry.parentId as string,url:entry.url,mode:entry.mode as 'overlay'|'replacement',hidden:entry.hidden===true});}}
+ for(const entry of source.productionInjuries){if(!isRecord(entry)||!bounded(entry.id,120)||!bounded(entry.parentId,120)||typeof entry.url!=='string'||!/^\/api\/cases\/[a-zA-Z0-9_-]+\/production\/[a-zA-Z0-9_-]+\/geometry$/.test(entry.url)||!['overlay','replacement'].includes(String(entry.mode)))return null;productionInjuries.push({id:entry.id as string,...(bounded(entry.name,160)?{name:entry.name as string}:{}),parentId:entry.parentId as string,url:entry.url,mode:entry.mode as 'overlay'|'replacement',hidden:entry.hidden===true});}}
  const generatedInjuries:GeneratedInjury[]=[];
  if(source.generatedInjuries!==undefined){
   if(!Array.isArray(source.generatedInjuries)||source.generatedInjuries.length>200)return null;

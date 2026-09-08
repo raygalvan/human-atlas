@@ -2,38 +2,41 @@ import {useState} from 'react';
 import {Focus} from 'lucide-react';
 import {Button} from '@/components/ui/button';
 import {Switch} from '@/components/ui/switch';
-import {HOMER_INJURIES,type HomerInjuryId} from './injuries';
+import {HOMER_INJURIES} from './injuries';
 import {filterCatalogue,type InjuryMatch} from './injury-library';
 import type {AppliedInjury,GeneratedInjury} from './injurybot-bridge';
 
 export type InjuryTab='client'|'apply';
 interface Props {
+ extraEntries?:{id:string;name:string;shortName:string;color:string;description:string}[];
  tab:InjuryTab;onTab:(tab:InjuryTab)=>void;
  applied:AppliedInjury[];generated:GeneratedInjury[];pieces:Map<string,number>;
- isolated:boolean;focused:HomerInjuryId|null;
- onToggleHidden:(id:string,hidden:boolean)=>void;onFocus:(id:HomerInjuryId)=>void;onIsolate:()=>void;onClear:()=>void;
- onApply:(ids:HomerInjuryId[])=>void;
+ isolated:boolean;focused:string|null;
+ onToggleHidden:(id:string,hidden:boolean)=>void;onFocus:(id:string)=>void;onIsolate:()=>void;onClear:()=>void;
+ onApply:(ids:string[])=>void;
  onMatch:(description:string)=>Promise<InjuryMatch>;
  onGenerate:(name:string,description:string)=>Promise<void>;
 }
-const entry=(id:string)=>HOMER_INJURIES.find(item=>item.id===id);
 const pieceLabel=(n:number)=>`${n} ${n===1?'piece':'pieces'}`;
 
 /** Hosted-case panel: what is applied to the model, and how to apply more. */
-export function InjuryPanel({tab,onTab,applied,generated,pieces,isolated,focused,onToggleHidden,onFocus,onIsolate,onClear,onApply,onMatch,onGenerate}:Props){
+export function InjuryPanel({tab,onTab,applied,generated,pieces,isolated,focused,onToggleHidden,onFocus,onIsolate,onClear,onApply,onMatch,onGenerate,extraEntries=[]}:Props){
+ const entry=(id:string)=>extraEntries.find(item=>item.id===id)||HOMER_INJURIES.find(item=>item.id===id);
+ const [requestError,setRequestError]=useState('');
  const [mode,setMode]=useState<'find'|'describe'>('find'),[catQuery,setCatQuery]=useState(''),[desc,setDesc]=useState(''),[searching,setSearching]=useState(false);
- const [results,setResults]=useState<HomerInjuryId[]|undefined>(undefined),[selected,setSelected]=useState<HomerInjuryId[]>([]),[missing,setMissing]=useState<string|null>(null),[creating,setCreating]=useState(false);
+ const [results,setResults]=useState<string[]|undefined>(undefined),[selected,setSelected]=useState<string[]>([]),[missing,setMissing]=useState<string|null>(null),[creating,setCreating]=useState(false);
  const appliedIds=applied.map(item=>item.id);
- const toggleSelected=(id:HomerInjuryId)=>setSelected(list=>list.includes(id)?list.filter(x=>x!==id):[...list,id]);
+ const toggleSelected=(id:string)=>setSelected(list=>list.includes(id)?list.filter(x=>x!==id):[...list,id]);
  const resetDescribe=()=>{setResults(undefined);setSelected([]);setMissing(null);setDesc('');};
  const apply=()=>{if(!selected.length)return;onApply(selected);setSelected([]);setResults(undefined);setMissing(null);setDesc('');setCatQuery('');onTab('client');};
- const find=async()=>{const text=desc.trim();if(!text||searching)return;setSearching(true);try{const result=await onMatch(text);const hits=result.matches.filter((id):id is HomerInjuryId=>!!entry(id)&&!appliedIds.includes(id));setResults(hits);setSelected(hits);setMissing(result.unmatched);}finally{setSearching(false);}};
- const create=async()=>{if(!missing||creating)return;setCreating(true);try{await onGenerate(missing,desc.trim());setMissing(null);}finally{setCreating(false);}};
- const checklist=(ids:HomerInjuryId[])=>ids.map(id=>{const item=entry(id)!,on=selected.includes(id);return <label className={`injury-pick ${on?'on':''}`} key={id}><input type="checkbox" checked={on} onChange={()=>toggleSelected(id)} aria-label={`Select ${item.name}`}/><span className="injury-swatch" style={{background:item.color}}/><span className="injury-copy"><strong>{item.shortName}</strong><small>{pieceLabel(pieces.get(id)??0)} · in library</small></span></label>;});
+ const find=async()=>{const text=desc.trim();if(!text||searching)return;setSearching(true);setRequestError('');try{const result=await onMatch(text);const hits=result.matches.filter((id)=>!!entry(id)&&!appliedIds.includes(id));setResults(hits);setSelected(hits);setMissing(result.unmatched);}catch(e){setRequestError((e as Error).message);}finally{setSearching(false);}};
+ const create=async()=>{if(!missing||creating)return;setCreating(true);setRequestError('');try{await onGenerate(missing,desc.trim());setMissing(null);}catch(e){setRequestError((e as Error).message);}finally{setCreating(false);}};
+ const checklist=(ids:string[])=>ids.map(id=>{const item=entry(id)!,on=selected.includes(id);return <label className={`injury-pick ${on?'on':''}`} key={id}><input type="checkbox" checked={on} onChange={()=>toggleSelected(id)} aria-label={`Select ${item.name}`}/><span className="injury-swatch" style={{background:item.color}}/><span className="injury-copy"><strong>{item.shortName}</strong><small>{pieceLabel(pieces.get(id)??0)} · in library</small></span></label>;});
  const catalogue=filterCatalogue(catQuery,appliedIds).map(item=>item.id);
  const applyLabel=selected.length?`Apply ${selected.length} ${selected.length===1?'injury':'injuries'} to the model`:'Select injuries to apply';
  const queued=generated.filter(item=>item.status!=='failed').length;
  return <>
+  {requestError&&<p className="injury-note" role="alert">{requestError}</p>}
   <div className="panel-tabs injury-tabs" role="tablist" aria-label="Case injuries">
    <Button variant="ghost" role="tab" aria-selected={tab==='client'} className={`client-tab ${tab==='client'?'active':''}`} onClick={()=>onTab('client')}>Client Injuries{applied.length>0&&<span className="injury-badge">{applied.length}</span>}</Button>
    <Button variant="ghost" role="tab" aria-selected={tab==='apply'} className={`apply-tab ${tab==='apply'?'active':''}`} onClick={()=>onTab('apply')}>Apply Injuries</Button>
@@ -43,7 +46,7 @@ export function InjuryPanel({tab,onTab,applied,generated,pieces,isolated,focused
     <div className="injury-owner"><strong>Applied to the model</strong><span>Toggle a group to show or hide it. Placement remains pending attorney review.</span></div>
     <div className="injury-list thin-scroll">
      {applied.map(item=>{const info=entry(item.id);if(!info)return null;const on=!item.hidden;return <div className={`injury-row ${on?'active':''} ${focused===info.id?'focused':''}`} key={item.id}><Button variant="ghost" className="injury-main" aria-label={info.shortName} onClick={()=>onFocus(info.id)} title={info.description}><span className="injury-swatch" style={{background:info.color}}/><span className="injury-copy"><strong>{info.shortName}</strong><small>{pieceLabel(pieces.get(info.id)??0)} · tap to isolate</small></span></Button><Switch checked={on} onCheckedChange={value=>onToggleHidden(item.id,!value)} aria-label={`Show ${info.name}`}/></div>;})}
-     {generated.map(item=><div className="injury-row generated" key={item.id}><div className="injury-main"><span className="injury-swatch pending"/><span className="injury-copy"><strong>{item.name}</strong><small>{item.status==='ready'?'Generated · awaiting placement review':item.status==='failed'?'Generation failed':'Generating · up to 10 minutes'}</small></span></div><Switch checked={false} disabled aria-label={`${item.name} is not ready`}/></div>)}
+     {generated.map(item=><div className="injury-row generated" key={item.id}><div className="injury-main"><span className="injury-swatch pending"/><span className="injury-copy"><strong>{item.name}</strong><small>{item.stage||(item.status==='ready'?'Generated · awaiting placement review':item.status==='failed'?'Generation failed':'Generating · up to 10 minutes')}</small></span></div><Switch checked={false} disabled aria-label={`${item.name} is not ready`}/></div>)}
     </div>
    </>}
    <div className="injury-foot client-foot"><Button variant="ghost" className={`isolate-injuries ${isolated?'active':''}`} disabled={!applied.length} aria-pressed={isolated} onClick={onIsolate}><Focus size={14}/>{isolated?'Show full body':'Isolate injuries'}</Button><Button variant="ghost" className="clear-injuries" disabled={!applied.length&&!generated.length} onClick={onClear}>Clear injuries</Button></div>
