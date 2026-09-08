@@ -3,10 +3,11 @@ import {Focus} from 'lucide-react';
 import {Button} from '@/components/ui/button';
 import {Switch} from '@/components/ui/switch';
 import type {InjuryMatch} from './injury-library';
-import type {AppliedInjury,GeneratedInjury} from './injurybot-bridge';
+import type {AppliedInjury,GeneratedInjury,PresentationColor} from './injurybot-bridge';
 
 export type InjuryTab='client'|'apply';
 interface Props {
+ selectInjuriesColor?:PresentationColor;
  catalogueEntries?:{id:string;name:string;shortName:string;color:string;description:string;section:string}[];
  extraEntries?:{id:string;name:string;shortName:string;color:string;description:string}[];
  tab:InjuryTab;onTab:(tab:InjuryTab)=>void;
@@ -20,7 +21,7 @@ interface Props {
 const pieceLabel=(n:number)=>`${n} ${n===1?'piece':'pieces'}`;
 
 /** Hosted-case panel: what is applied to the model, and how to apply more. */
-export function InjuryPanel({tab,onTab,applied,generated,pieces,isolated,focused,onToggleHidden,onFocus,onIsolate,onClear,onApply,onMatch,onGenerate,extraEntries=[],catalogueEntries=[]}:Props){
+export function InjuryPanel({selectInjuriesColor="default",tab,onTab,applied,generated,pieces,isolated,focused,onToggleHidden,onFocus,onIsolate,onClear,onApply,onMatch,onGenerate,extraEntries=[],catalogueEntries=[]}:Props){
  const entry=(id:string)=>extraEntries.find(item=>item.id===id)||catalogueEntries.find(item=>item.id===id);
  const [requestError,setRequestError]=useState('');
  const [mode,setMode]=useState<'find'|'describe'>('find'),[catQuery,setCatQuery]=useState(''),[desc,setDesc]=useState(''),[searching,setSearching]=useState(false);
@@ -38,7 +39,7 @@ export function InjuryPanel({tab,onTab,applied,generated,pieces,isolated,focused
  return <>
   {requestError&&<p className="injury-note" role="alert">{requestError}</p>}
   <div className="panel-tabs injury-tabs" role="tablist" aria-label="Case injuries">
-   <Button variant="ghost" role="tab" aria-selected={tab==='apply'} className={`apply-tab ${tab==='apply'?'active':''}`} onClick={()=>onTab('apply')}>Select Injuries</Button>
+   <Button variant="ghost" role="tab" aria-selected={tab==='apply'} data-afp-color={selectInjuriesColor} className={`apply-tab ${tab==='apply'?'active':''}`} onClick={()=>onTab('apply')}>Select Injuries</Button>
    <Button variant="ghost" role="tab" aria-selected={tab==='client'} className={`client-tab ${tab==='client'?'active':''}`} onClick={()=>onTab('client')}>Client Injuries{applied.length>0&&<span className="injury-badge">{applied.length}</span>}</Button>
   </div>
   {tab==='client'?<>
