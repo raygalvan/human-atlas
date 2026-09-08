@@ -1,3 +1,4 @@
+import {productionMaterial} from './injury-appearance';
 import {geometryFromData} from './production-injury';
 import {SAH,subarachnoidGeometry,subarachnoidMaterial} from './subarachnoid';
 import {RIB_FRACTURE,fractureGeometry} from './rib-fracture';
@@ -126,9 +127,9 @@ export default function AnatomyScene({atlas,state,onSelect,onProgress,onError,on
    const entries=latest.current.productionInjuries??[],key=JSON.stringify(entries);if(key===productionKey)return;productionKey=key;
    for(const {mesh} of productionMeshes.values()){scene.remove(mesh);mesh.geometry.dispose();(mesh.material as T.Material).dispose();}productionMeshes.clear();syncDetail();lastState=null;
    for(const entry of entries){if(entry.hidden)continue;const i=indexById.get(entry.parentId);if(i===undefined)continue;
-    try{const response=await fetch(entry.url,{signal:abort.signal,credentials:'same-origin'});if(!response.ok)throw new Error('Injury asset unavailable');const asset=await response.json() as {parentId:string;mode:string;geometry:import("./production-injury").GeometryData};if(disposed||productionKey!==key)return;
+    try{const response=await fetch(entry.url,{signal:abort.signal,credentials:'same-origin'});if(!response.ok)throw new Error('Injury asset unavailable');const asset=await response.json() as {parentId:string;mode:string;recipe:{kind:string};appearanceVersion?:number;geometry:import("./production-injury").GeometryData};if(disposed||productionKey!==key)return;
      if(asset.parentId!==entry.parentId||asset.mode!==entry.mode)throw new Error('Injury registration mismatch');
-     const geometry=geometryFromData(asset.geometry,i);const material=subarachnoidMaterial(partTexture,width);const mesh=new T.Mesh(geometry,material);mesh.frustumCulled=false;scene.add(mesh);productionMeshes.set(entry.id,{mesh,parent:i,mode:entry.mode});lastState=null;dirty=true;syncDetail();
+     const geometry=geometryFromData(asset.geometry,i);const material=productionMaterial(partTexture,width,asset.recipe.kind,asset.appearanceVersion??0);const mesh=new T.Mesh(geometry,material);mesh.frustumCulled=false;scene.add(mesh);productionMeshes.set(entry.id,{mesh,parent:i,mode:entry.mode});lastState=null;dirty=true;syncDetail();
     }catch(e){if(!disposed){el.dataset.productionError='Injury asset could not be loaded';console.error('Injury asset could not be loaded');}}
    }
   }
