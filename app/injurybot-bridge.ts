@@ -1,3 +1,5 @@
+export const presentationColors=["default","blue","green","red","amber","gray"] as const;
+export type PresentationColor=typeof presentationColors[number];
 export const INJURYBOT_ATLAS_PROTOCOL=1 as const;
 
 export interface HostedFindingSummary {
@@ -34,6 +36,7 @@ export interface InjuryBotHostConfig {
 }
 
 export type InjuryBotHostMessage=
+ | {type:'injurybot:atlas:presentation';version:typeof INJURYBOT_ATLAS_PROTOCOL;contract:'injury.bot.atlas.presentation/0.1';selectInjuriesColor:PresentationColor}
  | {type:'injurybot:atlas:init';version:typeof INJURYBOT_ATLAS_PROTOCOL;case:HostedCaseContext}
  | {type:'injurybot:atlas:match-result';version:typeof INJURYBOT_ATLAS_PROTOCOL;requestId:string;matches:string[];unmatched:string|null}
  | {type:'injurybot:atlas:generation';version:typeof INJURYBOT_ATLAS_PROTOCOL;caseId:string;injury:GeneratedInjury};
@@ -65,6 +68,10 @@ function parseGenerated(value:unknown):GeneratedInjury|null{
 
 export function parseInjuryBotHostMessage(value:unknown):InjuryBotHostMessage|null {
  if(!isRecord(value)||value.version!==INJURYBOT_ATLAS_PROTOCOL)return null;
+ if(value.type==='injurybot:atlas:presentation'){
+  if(Object.keys(value).some(k=>!['type','version','contract','selectInjuriesColor'].includes(k))||value.contract!=='injury.bot.atlas.presentation/0.1'||!presentationColors.includes(value.selectInjuriesColor as PresentationColor))return null;
+  return {type:'injurybot:atlas:presentation',version:1,contract:'injury.bot.atlas.presentation/0.1',selectInjuriesColor:value.selectInjuriesColor as PresentationColor};
+ }
  if(value.type==='injurybot:atlas:match-result'){
   const requestId=bounded(value.requestId,120);
   if(!requestId||!Array.isArray(value.matches)||value.matches.length>200)return null;
@@ -109,6 +116,7 @@ export function parseInjuryBotHostMessage(value:unknown):InjuryBotHostMessage|nu
 }
 
 export interface HostHandlers {
+ presentation?:(color:PresentationColor)=>void;
  context:(context:HostedCaseContext)=>void;
  matchResult?:(result:Extract<InjuryBotHostMessage,{type:'injurybot:atlas:match-result'}>)=>void;
  generation?:(message:Extract<InjuryBotHostMessage,{type:'injurybot:atlas:generation'}>)=>void;
@@ -121,10 +129,11 @@ export function connectInjuryBotHost(config:InjuryBotHostConfig,handlers:HostHan
   const message=parseInjuryBotHostMessage(event.data);if(!message)return;
   if(message.type==='injurybot:atlas:init')handlers.context(message.case);
   else if(message.type==='injurybot:atlas:match-result')handlers.matchResult?.(message);
+  else if(message.type==='injurybot:atlas:presentation')handlers.presentation?.(message.selectInjuriesColor);
   else handlers.generation?.(message);
  };
  window.addEventListener('message',receive);
- send({type:'human-atlas:ready',version:INJURYBOT_ATLAS_PROTOCOL,capabilities:['case-context','reference-groups','anatomy-selection','applied-injuries','injury-matching','injury-generation']});
+ send({type:'human-atlas:ready',version:INJURYBOT_ATLAS_PROTOCOL,capabilities:['private-presentation-v1','case-context','reference-groups','anatomy-selection','applied-injuries','injury-matching','injury-generation']});
  return {
   selection:(caseId:string|null,sourceIds:string[],label:string,point?:number[],normal?:number[])=>send({type:'human-atlas:selection',version:INJURYBOT_ATLAS_PROTOCOL,caseId,sourceIds,label,...(point&&normal?{point,normal}:{})}),
   injuriesApplied:(caseId:string,injuries:AppliedInjury[])=>send({type:'human-atlas:injuries-applied',version:INJURYBOT_ATLAS_PROTOCOL,caseId,injuries}),

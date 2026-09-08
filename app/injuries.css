@@ -72,3 +72,10 @@
 .studio .layers-panel.mobile-open .injury-list.catalogue-list,.studio .layers-panel.mobile-open .injury-list.results-list,.studio .layers-panel .injury-list.catalogue-list,.studio .layers-panel .injury-list.results-list{overflow-y:auto;flex-shrink:0}
 /* The host floats a 44px workspace button at the top-left of the viewer on phones. */
 @media(max-width:767px){.studio.embedded .identity{left:68px}.studio.embedded h1{max-width:calc(100vw - 148px)}}
+
+/* Reviewed AFP tokens only. No CSS or geometry is supplied by a user. */
+.injury-tabs .apply-tab[data-afp-color="blue"]{background:#1d4ed8;color:#fff;border-color:#1d4ed8}
+.injury-tabs .apply-tab[data-afp-color="green"]{background:#166534;color:#fff;border-color:#166534}
+.injury-tabs .apply-tab[data-afp-color="red"]{background:#b91c1c;color:#fff;border-color:#b91c1c}
+.injury-tabs .apply-tab[data-afp-color="amber"]{background:#92400e;color:#fff;border-color:#92400e}
+.injury-tabs .apply-tab[data-afp-color="gray"]{background:#475569;color:#fff;border-color:#475569}

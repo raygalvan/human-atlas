@@ -20,3 +20,6 @@ assert.deepEqual(parseInjuryBotHostMessage({type:'injurybot:atlas:match-result',
 assert.equal(parseInjuryBotHostMessage({type:'injurybot:atlas:match-result',version:INJURYBOT_ATLAS_PROTOCOL,requestId:'r1',matches:[''],unmatched:null}),null);
 assert.equal(parseInjuryBotHostMessage({type:'injurybot:atlas:generation',version:INJURYBOT_ATLAS_PROTOCOL,caseId:'c',injury:{id:'g1',name:'Femur fracture',status:'ready'}})?.injury.status,'ready');
 console.log('Verified Injury.bot host configuration, origin parsing, protocol version, and case payload validation.');
+
+for(const selectInjuriesColor of ['default','blue','green','red','amber','gray']) assert.ok(parseInjuryBotHostMessage({type:'injurybot:atlas:presentation',version:1,contract:'injury.bot.atlas.presentation/0.1',selectInjuriesColor}));
+for(const bad of [{selectInjuriesColor:'url(javascript:alert(1))'},{selectInjuriesColor:'#123456'},{selectInjuriesColor:'<script>'},{selectInjuriesColor:'blue',css:'body{}'},{selectInjuriesColor:'blue',contract:'unknown'}]) assert.equal(parseInjuryBotHostMessage({type:'injurybot:atlas:presentation',version:1,contract:'injury.bot.atlas.presentation/0.1',...bad}),null);
