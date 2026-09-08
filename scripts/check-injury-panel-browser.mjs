@@ -11,7 +11,7 @@ const server=createServer((req,res)=>{
  if(req.url==='/host'){res.setHeader('Content-Type','text/html');res.end(`<!doctype html><style>body{margin:0}iframe{border:0;width:100vw;height:100vh}</style><iframe title="Atlas"></iframe><script>
  const frame=document.querySelector('iframe');frame.src='/index.html?embed=injurybot&parentOrigin='+encodeURIComponent(location.origin);
  window.addEventListener('message',e=>{if(e.source!==frame.contentWindow||e.origin!==location.origin)return;const d=e.data,post=m=>frame.contentWindow.postMessage({version:1,...m},location.origin);
- if(d.type==='human-atlas:ready')post({type:'injurybot:atlas:init',case:{id:'synthetic-case',title:'Synthetic panel proof',findings:[],activeReferenceGroups:[],appliedInjuries:[],generatedInjuries:[],productionInjuries:[]}});
+ if(d.type==='human-atlas:ready')post({type:'injurybot:atlas:init',case:{id:'synthetic-case',title:'Synthetic panel proof',findings:[],activeReferenceGroups:[],appliedInjuries:[],generatedInjuries:[],productionInjuries:[],catalogue:[{id:'workflow-knee',name:'Patellar fracture',shortName:'Patellar fracture',description:'Synthetic workflow-created definition',section:'Injury library',color:'#984b49',sourceIds:[]}]}});
  if(d.type==='human-atlas:match-request')post({type:'injurybot:atlas:match-result',requestId:d.requestId,matches:[],unmatched:'Femur fracture'});
  if(d.type==='human-atlas:generate-request')post({type:'injurybot:atlas:generation',caseId:d.caseId,injury:{id:'synthetic-request',name:d.name,status:'queued',stage:'Queued for AI injury description'}});
  });</script>`);return;}
@@ -26,7 +26,7 @@ try{
  if(name==='mobile')await frame.getByRole('button',{name:'Open atlas layers',exact:true}).click();
  await frame.getByRole('tab',{name:'Apply Injuries',exact:true}).click();
  assert.equal(await frame.getByRole('button',{name:'Create / apply injuries',exact:true}).count(),0);
- await frame.getByPlaceholder('Filter the catalogue…').fill('skull');assert.equal(await frame.locator('.injury-pick').count(),1);
+ await frame.getByPlaceholder('Filter the catalogue…').fill('patellar');assert.equal(await frame.locator('.injury-pick').count(),1);
  await page.screenshot({path:path.join(output,name+'-find.png'),fullPage:true});
  await frame.getByRole('tab',{name:/Describe client/}).click();await frame.getByLabel("Describe the client's injuries",{exact:true}).fill('A fractured femur');await frame.getByRole('button',{name:'Find matching injuries',exact:true}).click();await frame.getByRole('button',{name:'Create & apply with AI',exact:true}).waitFor();
  await page.screenshot({path:path.join(output,name+'-describe.png'),fullPage:true});

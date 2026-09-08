@@ -13,7 +13,9 @@ export interface AppliedInjury {id:string;hidden:boolean}
 /** An injury the host is generating for this case (no catalogue entry yet). */
 export interface GeneratedInjury {id:string;name:string;status:'queued'|'generating'|'ready'|'failed';stage?:string}
 
+export interface HostedCatalogueEntry {id:string;name:string;shortName:string;color:string;section:string;description:string;sourceIds:string[]}
 export interface HostedCaseContext {
+ catalogue?:HostedCatalogueEntry[];
  id:string;
  title:string;
  client?:string;
@@ -92,6 +94,8 @@ export function parseInjuryBotHostMessage(value:unknown):InjuryBotHostMessage|nu
   if(!Array.isArray(source.appliedInjuries)||source.appliedInjuries.length>200)return null;
   for(const item of source.appliedInjuries){if(!isRecord(item))return null;const injuryId=bounded(item.id,120);if(!injuryId)return null;appliedInjuries.push({id:injuryId,hidden:item.hidden===true});}
  }
+ const catalogue:HostedCatalogueEntry[]=[];
+ if(source.catalogue!==undefined){if(!Array.isArray(source.catalogue)||source.catalogue.length>500)return null;for(const e of source.catalogue){if(!isRecord(e)||!bounded(e.id,120)||!bounded(e.name,160))return null;catalogue.push({id:e.id as string,name:e.name as string,shortName:bounded(e.shortName,160)||e.name as string,color:typeof e.color==='string'&&/^#[0-9a-f]{6}$/i.test(e.color)?e.color:'#984b49',section:bounded(e.section,120)||'Injury library',description:bounded(e.description,8000)||'',sourceIds:Array.isArray(e.sourceIds)?e.sourceIds.filter((id):id is string=>typeof id==='string'&&/^FJ\d+$/.test(id)).slice(0,20):[]});}}
  const productionInjuries:NonNullable<HostedCaseContext['productionInjuries']>=[];
  if(source.productionInjuries!==undefined){
  if(!Array.isArray(source.productionInjuries)||source.productionInjuries.length>50)return null;
@@ -101,7 +105,7 @@ export function parseInjuryBotHostMessage(value:unknown):InjuryBotHostMessage|nu
   if(!Array.isArray(source.generatedInjuries)||source.generatedInjuries.length>200)return null;
   for(const item of source.generatedInjuries){const parsed=parseGenerated(item);if(!parsed)return null;generatedInjuries.push(parsed);}
  }
- return {type:'injurybot:atlas:init',version:INJURYBOT_ATLAS_PROTOCOL,case:{id,title,...(client?{client}:{}),...(matterNumber?{matterNumber}:{}),findings,activeReferenceGroups:groups as string[],appliedInjuries,generatedInjuries,productionInjuries}};
+ return {type:'injurybot:atlas:init',version:INJURYBOT_ATLAS_PROTOCOL,case:{id,title,...(client?{client}:{}),...(matterNumber?{matterNumber}:{}),findings,activeReferenceGroups:groups as string[],appliedInjuries,generatedInjuries,productionInjuries,catalogue}};
 }
 
 export interface HostHandlers {

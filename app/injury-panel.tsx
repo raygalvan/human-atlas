@@ -2,12 +2,12 @@ import {useState} from 'react';
 import {Focus} from 'lucide-react';
 import {Button} from '@/components/ui/button';
 import {Switch} from '@/components/ui/switch';
-import {HOMER_INJURIES} from './injuries';
-import {filterCatalogue,type InjuryMatch} from './injury-library';
+import type {InjuryMatch} from './injury-library';
 import type {AppliedInjury,GeneratedInjury} from './injurybot-bridge';
 
 export type InjuryTab='client'|'apply';
 interface Props {
+ catalogueEntries?:{id:string;name:string;shortName:string;color:string;description:string;section:string}[];
  extraEntries?:{id:string;name:string;shortName:string;color:string;description:string}[];
  tab:InjuryTab;onTab:(tab:InjuryTab)=>void;
  applied:AppliedInjury[];generated:GeneratedInjury[];pieces:Map<string,number>;
@@ -20,8 +20,8 @@ interface Props {
 const pieceLabel=(n:number)=>`${n} ${n===1?'piece':'pieces'}`;
 
 /** Hosted-case panel: what is applied to the model, and how to apply more. */
-export function InjuryPanel({tab,onTab,applied,generated,pieces,isolated,focused,onToggleHidden,onFocus,onIsolate,onClear,onApply,onMatch,onGenerate,extraEntries=[]}:Props){
- const entry=(id:string)=>extraEntries.find(item=>item.id===id)||HOMER_INJURIES.find(item=>item.id===id);
+export function InjuryPanel({tab,onTab,applied,generated,pieces,isolated,focused,onToggleHidden,onFocus,onIsolate,onClear,onApply,onMatch,onGenerate,extraEntries=[],catalogueEntries=[]}:Props){
+ const entry=(id:string)=>extraEntries.find(item=>item.id===id)||catalogueEntries.find(item=>item.id===id);
  const [requestError,setRequestError]=useState('');
  const [mode,setMode]=useState<'find'|'describe'>('find'),[catQuery,setCatQuery]=useState(''),[desc,setDesc]=useState(''),[searching,setSearching]=useState(false);
  const [results,setResults]=useState<string[]|undefined>(undefined),[selected,setSelected]=useState<string[]>([]),[missing,setMissing]=useState<string|null>(null),[creating,setCreating]=useState(false);
@@ -32,7 +32,7 @@ export function InjuryPanel({tab,onTab,applied,generated,pieces,isolated,focused
  const find=async()=>{const text=desc.trim();if(!text||searching)return;setSearching(true);setRequestError('');try{const result=await onMatch(text);const hits=result.matches.filter((id)=>!!entry(id)&&!appliedIds.includes(id));setResults(hits);setSelected(hits);setMissing(result.unmatched);}catch(e){setRequestError((e as Error).message);}finally{setSearching(false);}};
  const create=async()=>{if(!missing||creating)return;setCreating(true);setRequestError('');try{await onGenerate(missing,desc.trim());setMissing(null);}catch(e){setRequestError((e as Error).message);}finally{setCreating(false);}};
  const checklist=(ids:string[])=>ids.map(id=>{const item=entry(id)!,on=selected.includes(id);return <label className={`injury-pick ${on?'on':''}`} key={id}><input type="checkbox" checked={on} onChange={()=>toggleSelected(id)} aria-label={`Select ${item.name}`}/><span className="injury-swatch" style={{background:item.color}}/><span className="injury-copy"><strong>{item.shortName}</strong><small>{pieceLabel(pieces.get(id)??0)} · in library</small></span></label>;});
- const catalogue=filterCatalogue(catQuery,appliedIds).map(item=>item.id);
+ const catalogue=catalogueEntries.filter(i=>!appliedIds.includes(i.id)&&(!catQuery.trim()||(i.name+' '+i.shortName+' '+i.section).toLowerCase().includes(catQuery.trim().toLowerCase()))).map(i=>i.id);
  const applyLabel=selected.length?`Apply ${selected.length} ${selected.length===1?'injury':'injuries'} to the model`:'Select injuries to apply';
  const queued=generated.filter(item=>item.status!=='failed').length;
  return <>
@@ -55,12 +55,12 @@ export function InjuryPanel({tab,onTab,applied,generated,pieces,isolated,focused
    {mode==='find'?<>
     <div className="injury-owner"><strong>Injury catalogue</strong><span>Select the injuries to place on the model. Can&apos;t find one? Switch to <b>Describe client&apos;s injuries</b> and AI will match or create it.</span></div>
     <input className="catalogue-filter" value={catQuery} onChange={e=>setCatQuery(e.target.value)} placeholder="Filter the catalogue…" aria-label="Filter the injury catalogue"/>
-    <div className="injury-list catalogue-list thin-scroll">{catalogue.length?checklist(catalogue):<p className="injury-note">{appliedIds.length===HOMER_INJURIES.length?'Every catalogue entry is already applied to this case.':'No catalogue entry matches. Describe the injury instead and AI can create it.'}</p>}</div>
+    <div className="injury-list catalogue-list thin-scroll">{catalogue.length?checklist(catalogue):<p className="injury-note">{catalogueEntries.length>0&&catalogueEntries.every(i=>appliedIds.includes(i.id))?'Every catalogue entry is already applied to this case.':'No catalogue entry matches. Describe the injury instead and AI can create it.'}</p>}</div>
     <div className="apply-actions"><Button variant="ghost" className="apply-primary" disabled={!selected.length} onClick={apply}>{applyLabel}</Button></div>
    </>:<>
     <label className="describe-label" htmlFor="describe-injuries">Describe the client&apos;s injuries</label>
     <p className="injury-note">Use this when an injury isn&apos;t in our catalogue. AI matches your description to existing entries and offers to create anything missing.</p>
-    <textarea id="describe-injuries" className={`describe-input ${results===undefined||searching?'fill':''}`} value={desc} onChange={e=>setDesc(e.target.value)} placeholder="e.g. Struck on the head by a falling piano. ER notes a left frontal skull fracture and subarachnoid bleed; two fractured ribs on the left."/>
+    <textarea id="describe-injuries" className={`describe-input ${results===undefined||searching?'fill':''}`} value={desc} onChange={e=>setDesc(e.target.value)} placeholder="e.g. Broken kneecap after a fall."/>
     {results===undefined||searching?<div className="apply-actions"><Button variant="ghost" className="apply-primary" disabled={!desc.trim()||searching} onClick={find}>{searching?'Matching injuries…':'Find matching injuries'}</Button></div>:<>
      <div className="injury-owner"><strong>{results.length?'Matches in the catalogue':'No catalogue matches'}</strong><span>{results.length?'Select the injuries to place on the model.':'Nothing in the description matched an existing entry.'}</span></div>
      {results.length>0&&<div className="injury-list results-list thin-scroll">{checklist(results)}</div>}
