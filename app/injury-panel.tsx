@@ -38,11 +38,11 @@ export function InjuryPanel({tab,onTab,applied,generated,pieces,isolated,focused
  return <>
   {requestError&&<p className="injury-note" role="alert">{requestError}</p>}
   <div className="panel-tabs injury-tabs" role="tablist" aria-label="Case injuries">
+   <Button variant="ghost" role="tab" aria-selected={tab==='apply'} className={`apply-tab ${tab==='apply'?'active':''}`} onClick={()=>onTab('apply')}>Select Injuries</Button>
    <Button variant="ghost" role="tab" aria-selected={tab==='client'} className={`client-tab ${tab==='client'?'active':''}`} onClick={()=>onTab('client')}>Client Injuries{applied.length>0&&<span className="injury-badge">{applied.length}</span>}</Button>
-   <Button variant="ghost" role="tab" aria-selected={tab==='apply'} className={`apply-tab ${tab==='apply'?'active':''}`} onClick={()=>onTab('apply')}>Apply Injuries</Button>
   </div>
   {tab==='client'?<>
-   {applied.length===0&&generated.length===0?<div className="injury-empty"><strong>No injuries applied</strong><p>Open Apply Injuries to pick from the injury catalogue, or describe the client&apos;s injuries and AI will match or create them. Applied injuries appear here and on the 3D model.</p></div>:<>
+   {applied.length===0&&generated.length===0?<div className="injury-empty"><strong>No injuries applied</strong><p>Open Select Injuries to pick from the injury catalogue, or describe the client&apos;s injuries and AI will match or create them. Applied injuries appear here and on the 3D model.</p></div>:<>
     <div className="injury-owner"><strong>Applied to the model</strong><span>Toggle a group to show or hide it. Placement remains pending attorney review.</span></div>
     <div className="injury-list thin-scroll">
      {applied.map(item=>{const info=entry(item.id);if(!info)return null;const on=!item.hidden;return <div className={`injury-row ${on?'active':''} ${focused===info.id?'focused':''}`} key={item.id}><Button variant="ghost" className="injury-main" aria-label={info.shortName} onClick={()=>onFocus(info.id)} title={info.description}><span className="injury-swatch" style={{background:info.color}}/><span className="injury-copy"><strong>{info.shortName}</strong><small>{pieceLabel(pieces.get(info.id)??0)} · tap to isolate</small></span></Button><Switch checked={on} onCheckedChange={value=>onToggleHidden(item.id,!value)} aria-label={`Show ${info.name}`}/></div>;})}
