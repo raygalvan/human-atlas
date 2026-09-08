@@ -38,7 +38,9 @@ jobs:
           else
             git diff --name-only HEAD~1 HEAD > "$RUNNER_TEMP/changed-paths"
           fi
-          if grep -Eq 'subarachnoid' "$RUNNER_TEMP/changed-paths"; then
+          if grep -Eq '^app/injury-panel.tsx$' "$RUNNER_TEMP/changed-paths" && ! grep -Eq '^app/(scene|anatomy)\.' "$RUNNER_TEMP/changed-paths"; then
+            echo 'script=check-injury-panel-browser.mjs' >> "$GITHUB_OUTPUT"
+          elif grep -Eq 'subarachnoid' "$RUNNER_TEMP/changed-paths"; then
             echo 'script=check-subarachnoid-browser.mjs' >> "$GITHUB_OUTPUT"
           elif grep -Eq 'rib-fracture|check-fracture|validate-fracture' "$RUNNER_TEMP/changed-paths"; then
             echo 'script=check-fracture-browser.mjs' >> "$GITHUB_OUTPUT"

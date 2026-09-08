@@ -11,9 +11,11 @@ export interface HostedFindingSummary {
 /** An injury the host has applied to this case. `id` is a catalogue id. */
 export interface AppliedInjury {id:string;hidden:boolean}
 /** An injury the host is generating for this case (no catalogue entry yet). */
-export interface GeneratedInjury {id:string;name:string;status:'queued'|'generating'|'ready'|'failed'}
+export interface GeneratedInjury {id:string;name:string;status:'queued'|'generating'|'ready'|'failed';stage?:string}
 
+export interface HostedCatalogueEntry {id:string;name:string;shortName:string;color:string;section:string;description:string;sourceIds:string[]}
 export interface HostedCaseContext {
+ catalogue?:HostedCatalogueEntry[];
  id:string;
  title:string;
  client?:string;
@@ -22,7 +24,7 @@ export interface HostedCaseContext {
  activeReferenceGroups:string[];
  appliedInjuries:AppliedInjury[];
  generatedInjuries:GeneratedInjury[];
- productionInjuries?:{id:string;parentId:string;url:string;hidden:boolean;mode:"overlay"|"replacement"}[];
+ productionInjuries?:{id:string;name?:string;parentId:string;url:string;hidden:boolean;mode:"overlay"|"replacement"}[];
 }
 
 export interface InjuryBotHostConfig {
@@ -58,7 +60,7 @@ function parseGenerated(value:unknown):GeneratedInjury|null{
  if(!isRecord(value))return null;
  const id=bounded(value.id,120),name=bounded(value.name,160);
  if(!id||!name||!validStatus(value.status,['queued','generating','ready','failed']))return null;
- return {id,name,status:value.status as GeneratedInjury['status']};
+ return {id,name,status:value.status as GeneratedInjury['status'],...(bounded(value.stage,500)?{stage:value.stage as string}:{})};
 }
 
 export function parseInjuryBotHostMessage(value:unknown):InjuryBotHostMessage|null {
@@ -92,16 +94,18 @@ export function parseInjuryBotHostMessage(value:unknown):InjuryBotHostMessage|nu
   if(!Array.isArray(source.appliedInjuries)||source.appliedInjuries.length>200)return null;
   for(const item of source.appliedInjuries){if(!isRecord(item))return null;const injuryId=bounded(item.id,120);if(!injuryId)return null;appliedInjuries.push({id:injuryId,hidden:item.hidden===true});}
  }
+ const catalogue:HostedCatalogueEntry[]=[];
+ if(source.catalogue!==undefined){if(!Array.isArray(source.catalogue)||source.catalogue.length>500)return null;for(const e of source.catalogue){if(!isRecord(e)||!bounded(e.id,120)||!bounded(e.name,160))return null;catalogue.push({id:e.id as string,name:e.name as string,shortName:bounded(e.shortName,160)||e.name as string,color:typeof e.color==='string'&&/^#[0-9a-f]{6}$/i.test(e.color)?e.color:'#984b49',section:bounded(e.section,120)||'Injury library',description:bounded(e.description,8000)||'',sourceIds:Array.isArray(e.sourceIds)?e.sourceIds.filter((id):id is string=>typeof id==='string'&&/^FJ\d+$/.test(id)).slice(0,20):[]});}}
  const productionInjuries:NonNullable<HostedCaseContext['productionInjuries']>=[];
  if(source.productionInjuries!==undefined){
  if(!Array.isArray(source.productionInjuries)||source.productionInjuries.length>50)return null;
- for(const entry of source.productionInjuries){if(!isRecord(entry)||!bounded(entry.id,120)||!bounded(entry.parentId,120)||typeof entry.url!=='string'||!/^\/api\/cases\/[a-zA-Z0-9_-]+\/production\/[a-zA-Z0-9_-]+\/geometry$/.test(entry.url)||!['overlay','replacement'].includes(String(entry.mode)))return null;productionInjuries.push({id:entry.id as string,parentId:entry.parentId as string,url:entry.url,mode:entry.mode as 'overlay'|'replacement',hidden:entry.hidden===true});}}
+ for(const entry of source.productionInjuries){if(!isRecord(entry)||!bounded(entry.id,120)||!bounded(entry.parentId,120)||typeof entry.url!=='string'||!/^\/api\/cases\/[a-zA-Z0-9_-]+\/production\/[a-zA-Z0-9_-]+\/geometry$/.test(entry.url)||!['overlay','replacement'].includes(String(entry.mode)))return null;productionInjuries.push({id:entry.id as string,...(bounded(entry.name,160)?{name:entry.name as string}:{}),parentId:entry.parentId as string,url:entry.url,mode:entry.mode as 'overlay'|'replacement',hidden:entry.hidden===true});}}
  const generatedInjuries:GeneratedInjury[]=[];
  if(source.generatedInjuries!==undefined){
   if(!Array.isArray(source.generatedInjuries)||source.generatedInjuries.length>200)return null;
   for(const item of source.generatedInjuries){const parsed=parseGenerated(item);if(!parsed)return null;generatedInjuries.push(parsed);}
  }
- return {type:'injurybot:atlas:init',version:INJURYBOT_ATLAS_PROTOCOL,case:{id,title,...(client?{client}:{}),...(matterNumber?{matterNumber}:{}),findings,activeReferenceGroups:groups as string[],appliedInjuries,generatedInjuries,productionInjuries}};
+ return {type:'injurybot:atlas:init',version:INJURYBOT_ATLAS_PROTOCOL,case:{id,title,...(client?{client}:{}),...(matterNumber?{matterNumber}:{}),findings,activeReferenceGroups:groups as string[],appliedInjuries,generatedInjuries,productionInjuries,catalogue}};
 }
 
 export interface HostHandlers {

@@ -26,7 +26,7 @@ const UNKNOWN:[RegExp,string][]=[
  [/\bhumerus|upper arm|elbow\b/i,'Humerus fracture'],
  [/\btibia|fibula|shin|lower leg\b/i,'Tibial fracture'],
 ];
-export interface InjuryMatch {matches:HomerInjuryId[];unmatched:string|null}
+export interface InjuryMatch {matches:string[];unmatched:string|null}
 export function matchInjuriesLocally(description:string):InjuryMatch{
  const text=description.trim();
  if(!text)return {matches:[],unmatched:null};
