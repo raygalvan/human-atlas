@@ -8,7 +8,7 @@ export function serializeGeometry(g:T.BufferGeometry):GeometryData {
 }
 export function geometryFromData(d:GeometryData,index=0){
  if(!d||!Array.isArray(d.positions)||d.positions.length>1800000||d.positions.length%9||!d.positions.length||d.normals.length!==d.positions.length||d.colors.length!==d.positions.length||d.indices.length%3||d.indices.length>1800000||![...d.positions,...d.normals,...d.colors].every(Number.isFinite)||!d.indices.every(i=>Number.isInteger(i)&&i>=0&&i<d.positions.length/3))throw new Error('Invalid injury geometry');
- const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(d.positions,3));g.setAttribute('normal',new T.Float32BufferAttribute(d.normals,3));g.setAttribute('color',new T.Float32BufferAttribute(d.colors,3));g.setAttribute('partIndex',new T.Float32BufferAttribute(new Array(d.positions.length/3).fill(index),1));g.setIndex(d.indices);g.computeBoundingBox();g.computeBoundingSphere();return g;
+ const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(d.positions,3));g.setAttribute('normal',new T.BufferAttribute(Int16Array.from(d.normals,n=>Math.round(T.MathUtils.clamp(n,-1,1)*32767)),3,true));g.setAttribute('color',new T.Float32BufferAttribute(d.colors,3));g.setAttribute('partIndex',new T.Float32BufferAttribute(new Array(d.positions.length/3).fill(index),1));g.setIndex(d.indices);g.computeBoundingBox();g.computeBoundingSphere();return g;
 }
 /** Clips actual source triangles to a local measured polygon. Thickness follows
  * interpolated source normals; no free-floating primitive replaces the anatomy. */
