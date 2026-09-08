@@ -22,6 +22,7 @@ export interface HostedCaseContext {
  activeReferenceGroups:string[];
  appliedInjuries:AppliedInjury[];
  generatedInjuries:GeneratedInjury[];
+ productionInjuries?:{id:string;parentId:string;url:string;hidden:boolean;mode:"overlay"|"replacement"}[];
 }
 
 export interface InjuryBotHostConfig {
@@ -36,7 +37,7 @@ export type InjuryBotHostMessage=
  | {type:'injurybot:atlas:generation';version:typeof INJURYBOT_ATLAS_PROTOCOL;caseId:string;injury:GeneratedInjury};
 export type AtlasHostMessage=
  | {type:'human-atlas:ready';version:typeof INJURYBOT_ATLAS_PROTOCOL;capabilities:string[]}
- | {type:'human-atlas:selection';version:typeof INJURYBOT_ATLAS_PROTOCOL;caseId:string|null;sourceIds:string[];label:string}
+ | {type:'human-atlas:selection';version:typeof INJURYBOT_ATLAS_PROTOCOL;caseId:string|null;sourceIds:string[];label:string;point?:number[];normal?:number[]}
  | {type:'human-atlas:injuries-applied';version:typeof INJURYBOT_ATLAS_PROTOCOL;caseId:string;injuries:AppliedInjury[]}
  | {type:'human-atlas:match-request';version:typeof INJURYBOT_ATLAS_PROTOCOL;caseId:string;requestId:string;description:string}
  | {type:'human-atlas:generate-request';version:typeof INJURYBOT_ATLAS_PROTOCOL;caseId:string;name:string;description:string};
@@ -91,12 +92,16 @@ export function parseInjuryBotHostMessage(value:unknown):InjuryBotHostMessage|nu
   if(!Array.isArray(source.appliedInjuries)||source.appliedInjuries.length>200)return null;
   for(const item of source.appliedInjuries){if(!isRecord(item))return null;const injuryId=bounded(item.id,120);if(!injuryId)return null;appliedInjuries.push({id:injuryId,hidden:item.hidden===true});}
  }
+ const productionInjuries:NonNullable<HostedCaseContext['productionInjuries']>=[];
+ if(source.productionInjuries!==undefined){
+ if(!Array.isArray(source.productionInjuries)||source.productionInjuries.length>50)return null;
+ for(const entry of source.productionInjuries){if(!isRecord(entry)||!bounded(entry.id,120)||!bounded(entry.parentId,120)||typeof entry.url!=='string'||!/^\/api\/cases\/[a-zA-Z0-9_-]+\/production\/[a-zA-Z0-9_-]+\/geometry$/.test(entry.url)||!['overlay','replacement'].includes(String(entry.mode)))return null;productionInjuries.push({id:entry.id as string,parentId:entry.parentId as string,url:entry.url,mode:entry.mode as 'overlay'|'replacement',hidden:entry.hidden===true});}}
  const generatedInjuries:GeneratedInjury[]=[];
  if(source.generatedInjuries!==undefined){
   if(!Array.isArray(source.generatedInjuries)||source.generatedInjuries.length>200)return null;
   for(const item of source.generatedInjuries){const parsed=parseGenerated(item);if(!parsed)return null;generatedInjuries.push(parsed);}
  }
- return {type:'injurybot:atlas:init',version:INJURYBOT_ATLAS_PROTOCOL,case:{id,title,...(client?{client}:{}),...(matterNumber?{matterNumber}:{}),findings,activeReferenceGroups:groups as string[],appliedInjuries,generatedInjuries}};
+ return {type:'injurybot:atlas:init',version:INJURYBOT_ATLAS_PROTOCOL,case:{id,title,...(client?{client}:{}),...(matterNumber?{matterNumber}:{}),findings,activeReferenceGroups:groups as string[],appliedInjuries,generatedInjuries,productionInjuries}};
 }
 
 export interface HostHandlers {
@@ -117,7 +122,7 @@ export function connectInjuryBotHost(config:InjuryBotHostConfig,handlers:HostHan
  window.addEventListener('message',receive);
  send({type:'human-atlas:ready',version:INJURYBOT_ATLAS_PROTOCOL,capabilities:['case-context','reference-groups','anatomy-selection','applied-injuries','injury-matching','injury-generation']});
  return {
-  selection:(caseId:string|null,sourceIds:string[],label:string)=>send({type:'human-atlas:selection',version:INJURYBOT_ATLAS_PROTOCOL,caseId,sourceIds,label}),
+  selection:(caseId:string|null,sourceIds:string[],label:string,point?:number[],normal?:number[])=>send({type:'human-atlas:selection',version:INJURYBOT_ATLAS_PROTOCOL,caseId,sourceIds,label,...(point&&normal?{point,normal}:{})}),
   injuriesApplied:(caseId:string,injuries:AppliedInjury[])=>send({type:'human-atlas:injuries-applied',version:INJURYBOT_ATLAS_PROTOCOL,caseId,injuries}),
   matchRequest:(caseId:string,requestId:string,description:string)=>send({type:'human-atlas:match-request',version:INJURYBOT_ATLAS_PROTOCOL,caseId,requestId,description}),
   generateRequest:(caseId:string,name:string,description:string)=>send({type:'human-atlas:generate-request',version:INJURYBOT_ATLAS_PROTOCOL,caseId,name,description}),

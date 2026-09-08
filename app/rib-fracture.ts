@@ -6,13 +6,16 @@ const field=(p:T.Vector3)=>p.z-.010+.00065*Math.sin((p.x-.09)*1400)+.0004*Math.s
 const blend=(a:V,b:V,t:number):V=>({p:a.p.clone().lerp(b.p,t),n:a.n.clone().lerp(b.n,t).normalize(),c:a.c.clone().lerp(b.c,t)});
 /** Rebuilt from whichever registered source geometry is active. Original surfaces
  * outside the small fracture slab are copied exactly, without displacement. */
-export function fractureGeometry(source:T.BufferGeometry,parentIndex:number){
+export function fractureGeometry(source:T.BufferGeometry,parentIndex:number,recipe?:{center:number[];normal:number[];gap:number}){
+ const center=recipe?new T.Vector3(...recipe.center):null,axis=recipe?new T.Vector3(...recipe.normal).normalize():null;
+ const cutField=recipe?(p:T.Vector3)=>p.clone().sub(center!).dot(axis!):field;
+ const gap=recipe?.gap??RIB_FRACTURE.gap;
  const pos=source.getAttribute('position'),normal=source.getAttribute('normal'),color=source.getAttribute('color'),idx=source.index!;
  const points:number[]=[],normals:number[]=[],colors:number[]=[],segments:[T.Vector3,T.Vector3][][]=[[],[]];let faces=0;
  const emit=(v:V[])=>{for(let k=1;k+1<v.length;k++)for(const w of [v[0],v[k],v[k+1]]){points.push(...w.p.toArray());normals.push(...w.n.toArray());colors.push(w.c.r,w.c.g,w.c.b);}};
  const clip=(tri:V[],sign:number,bucket:number)=>{
   const out:V[]=[],edge:T.Vector3[]=[];
-  tri.forEach((a,i)=>{const b=tri[(i+1)%3],da=sign*field(a.p)-RIB_FRACTURE.gap/2,db=sign*field(b.p)-RIB_FRACTURE.gap/2;
+  tri.forEach((a,i)=>{const b=tri[(i+1)%3],da=sign*cutField(a.p)-gap/2,db=sign*cutField(b.p)-gap/2;
    if(da>=0)out.push(a);
    if((da>=0)!==(db>=0)){const v=blend(a,b,da/(da-db));out.push(v);edge.push(v.p);}
   });emit(out);if(edge.length===2&&edge[0].distanceToSquared(edge[1])>1e-16)segments[bucket].push([edge[0],edge[1]]);
@@ -23,7 +26,7 @@ export function fractureGeometry(source:T.BufferGeometry,parentIndex:number){
   clip(tri,1,0);clip(tri,-1,1);
  };
  for(let t=0;t<idx.count;t+=3){const tri=[0,1,2].map(k=>{const i=idx.getX(t+k);return {p:new T.Vector3().fromBufferAttribute(pos,i),n:new T.Vector3().fromBufferAttribute(normal,i),c:color?new T.Color().setRGB(color.getX(i),color.getY(i),color.getZ(i)):new T.Color('#d8cbb1')};});
-  if(tri.every(v=>v.p.z<.005)||tri.every(v=>v.p.z>.015)||tri.every(v=>v.p.x<.07))emit(tri);else cut(tri);
+  if(recipe?(tri.every(v=>cutField(v.p)>gap*2)||tri.every(v=>cutField(v.p)<-gap*2)):(tri.every(v=>v.p.z<.005)||tri.every(v=>v.p.z>.015)||tri.every(v=>v.p.x<.07)))emit(tri);else cut(tri);
  }
  // Close the two cut contours with explicitly illustrative solid fracture faces.
  // These are NOT reconstructed cortex, marrow, or trabecular anatomy.
@@ -36,9 +39,10 @@ export function fractureGeometry(source:T.BufferGeometry,parentIndex:number){
     const e=pool.splice(i,1)[0];loop.push(e[0].distanceToSquared(end)<1e-12?e[1]:e[0]);
    }
    if(!closed||loop.length<3)continue;
-   const polygon=loop.map(p=>new T.Vector2(p.x,p.y));
+   const u=axis?new T.Vector3(Math.abs(axis.y)<.9?0:1,Math.abs(axis.y)<.9?1:0,0).cross(axis).normalize():new T.Vector3(1,0,0),v=axis?axis.clone().cross(u):new T.Vector3(0,1,0);
+   const polygon=loop.map(p=>new T.Vector2(p.dot(u),p.dot(v)));
    for(const ids of T.ShapeUtils.triangulateShape(polygon,[])){
-    const vertices=ids.map(i=>loop[i]);const n=new T.Vector3().subVectors(vertices[1],vertices[0]).cross(new T.Vector3().subVectors(vertices[2],vertices[0])).normalize();if(n.z*(side===0?-1:1)<0){vertices.reverse();n.negate();}
+    const vertices=ids.map(i=>loop[i]);const n=new T.Vector3().subVectors(vertices[1],vertices[0]).cross(new T.Vector3().subVectors(vertices[2],vertices[0])).normalize();if((axis?n.dot(axis):n.z)*(side===0?-1:1)<0){vertices.reverse();n.negate();}
     emit(vertices.map(p=>({p,n,c:new T.Color('#a89474')})));faces++;
    }
   }
