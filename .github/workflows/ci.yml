@@ -26,6 +26,7 @@ jobs:
       - run: node scripts/validate-injurybot-bridge.mjs
       - run: node scripts/validate-fracture.mjs && node scripts/validate-abrasion.mjs
       - run: node scripts/validate-subarachnoid.mjs
+      - run: node scripts/validate-production.mjs
       - run: npm run build
       - name: Select focused browser proof
         id: proof
