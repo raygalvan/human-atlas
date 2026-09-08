@@ -24,7 +24,8 @@ try{
  const context=await browser.newContext({viewport}),page=await context.newPage();page.setDefaultTimeout(90000);const errors=[];page.on('pageerror',e=>errors.push(e.message));
  await page.goto(`http://127.0.0.1:${server.address().port}/host`);const frame=page.frameLocator('iframe');await frame.locator('canvas').waitFor();await frame.locator('.loading').waitFor({state:'hidden'});
  if(name==='mobile')await frame.getByRole('button',{name:'Open atlas layers',exact:true}).click();
- await frame.getByRole('tab',{name:'Apply Injuries',exact:true}).click();
+ assert.deepEqual(await frame.locator('.injury-tabs [role=tab]').allTextContents(),['Select Injuries','Client Injuries']);
+ await frame.getByRole('tab',{name:'Select Injuries',exact:true}).click();
  assert.equal(await frame.getByRole('button',{name:'Create / apply injuries',exact:true}).count(),0);
  await frame.getByPlaceholder('Filter the catalogue…').fill('patellar');assert.equal(await frame.locator('.injury-pick').count(),1);
  await page.screenshot({path:path.join(output,name+'-find.png'),fullPage:true});
